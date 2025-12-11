@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Search, TrendingUp, TrendingDown, DollarSign, Calendar, ArrowUpRight, ArrowDownLeft, Printer } from 'lucide-react';
+import { Plus, Search, TrendingUp, DollarSign, Calendar, ArrowUpRight, ArrowDownLeft, Printer } from 'lucide-react';
 import { type FinancialTransaction, type TransactionCategory } from '../types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
