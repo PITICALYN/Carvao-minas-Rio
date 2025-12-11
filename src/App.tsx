@@ -11,6 +11,8 @@ import { Compras } from './pages/Compras';
 import { Financeiro } from './pages/Financeiro';
 import { Expedicao } from './pages/Expedicao';
 import { Login } from './pages/Login';
+import { Users } from './pages/Users';
+import { AuditLogs } from './pages/AuditLogs';
 import { useAppStore } from './store/useAppStore';
 
 function App() {
@@ -33,6 +35,8 @@ function App() {
           <Route path="expedicao" element={<Expedicao />} />
           <Route path="financeiro" element={<Financeiro />} />
           <Route path="controladoria" element={<Reports />} />
+          <Route path="usuarios" element={<Users />} />
+          <Route path="auditoria" element={<AuditLogs />} />
 
           {/* Legacy Routes Redirects or Keep for now */}
           <Route path="suppliers" element={<Suppliers />} />

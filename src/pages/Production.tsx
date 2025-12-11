@@ -42,7 +42,7 @@ export const Production = () => {
         return ((input - totalOutputKg) / input) * 100;
     };
 
-    const PAULISTAO_WEIGHT = 10; // TODO: Confirm weight
+    const PAULISTAO_WEIGHT = 16; // Updated to 16kg per user request
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

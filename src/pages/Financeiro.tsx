@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Search, TrendingUp, TrendingDown, DollarSign, Calendar, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Plus, Search, TrendingUp, TrendingDown, DollarSign, Calendar, ArrowUpRight, ArrowDownLeft, Printer } from 'lucide-react';
 import { type FinancialTransaction, type TransactionCategory } from '../types';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const Financeiro = () => {
     const { transactions, addTransaction } = useAppStore();
@@ -56,48 +57,145 @@ export const Financeiro = () => {
     const totalExpense = transactions.filter(t => t.type === 'Expense').reduce((acc, t) => acc + t.amount, 0);
     const balance = totalIncome - totalExpense;
 
+    // Cash Flow Projection (Next 30 Days)
+    const getProjectionData = () => {
+        const today = new Date();
+        const data = [];
+        let currentBalance = balance;
+
+        for (let i = 0; i < 30; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() + i);
+            const dateStr = date.toISOString().split('T')[0];
+
+            // Find transactions due on this date
+            const dailyTransactions = transactions.filter(t =>
+                t.status === 'Pending' && t.dueDate === dateStr
+            );
+
+            const dailyIncome = dailyTransactions
+                .filter(t => t.type === 'Income')
+                .reduce((acc, t) => acc + t.amount, 0);
+
+            const dailyExpense = dailyTransactions
+                .filter(t => t.type === 'Expense')
+                .reduce((acc, t) => acc + t.amount, 0);
+
+            currentBalance += (dailyIncome - dailyExpense);
+
+            data.push({
+                date: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                balance: currentBalance
+            });
+        }
+        return data;
+    };
+
+    const projectionData = getProjectionData();
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-white">Financeiro</h1>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg"
-                >
-                    <Plus className="w-4 h-4" />
-                    Nova Transação
-                </button>
+                <div className="flex gap-3">
+                    {(useAppStore.getState().currentUser?.role === 'Admin' || useAppStore.getState().currentUser?.canPrint) && (
+                        <button
+                            onClick={() => window.print()}
+                            className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors border border-white/10"
+                        >
+                            <Printer className="w-4 h-4" />
+                            Imprimir
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Nova Transação
+                    </button>
+                </div>
             </div>
 
             {/* Financial Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="glass-card p-6 rounded-xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <TrendingUp className="w-24 h-24 text-green-500" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="glass-card p-6 rounded-2xl flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400">
+                        <ArrowDownLeft className="w-6 h-6" />
                     </div>
-                    <p className="text-slate-400 text-sm font-medium mb-1">Receitas Totais</p>
-                    <h3 className="text-2xl font-bold text-green-400">R$ {totalIncome.toLocaleString()}</h3>
+                    <div>
+                        <p className="text-sm text-slate-400 font-medium">Receitas Totais</p>
+                        <h3 className="text-2xl font-bold text-white">R$ {totalIncome.toLocaleString()}</h3>
+                    </div>
                 </div>
-
-                <div className="glass-card p-6 rounded-xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <TrendingDown className="w-24 h-24 text-red-500" />
+                <div className="glass-card p-6 rounded-2xl flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-red-500/20 text-red-400">
+                        <ArrowUpRight className="w-6 h-6" />
                     </div>
-                    <p className="text-slate-400 text-sm font-medium mb-1">Despesas Totais</p>
-                    <h3 className="text-2xl font-bold text-red-400">R$ {totalExpense.toLocaleString()}</h3>
+                    <div>
+                        <p className="text-sm text-slate-400 font-medium">Despesas Totais</p>
+                        <h3 className="text-2xl font-bold text-white">R$ {totalExpense.toLocaleString()}</h3>
+                    </div>
                 </div>
-
-                <div className="glass-card p-6 rounded-xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <DollarSign className="w-24 h-24 text-blue-500" />
+                <div className="glass-card p-6 rounded-2xl flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-blue-500/20 text-blue-400">
+                        <DollarSign className="w-6 h-6" />
                     </div>
-                    <p className="text-slate-400 text-sm font-medium mb-1">Saldo Líquido</p>
-                    <h3 className={`text-2xl font-bold ${balance >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
-                        R$ {balance.toLocaleString()}
-                    </h3>
+                    <div>
+                        <p className="text-sm text-slate-400 font-medium">Saldo Atual</p>
+                        <h3 className={`text-2xl font-bold ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            R$ {balance.toLocaleString()}
+                        </h3>
+                    </div>
                 </div>
             </div>
 
+            {/* Cash Flow Projection Chart */}
+            <div className="glass-panel p-6 rounded-2xl">
+                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                    Fluxo de Caixa Projetado (30 Dias)
+                </h3>
+                <div className="h-80 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={projectionData}>
+                            <defs>
+                                <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                            <XAxis
+                                dataKey="date"
+                                stroke="#94a3b8"
+                                tick={{ fill: '#94a3b8' }}
+                                tickLine={false}
+                                axisLine={false}
+                            />
+                            <YAxis
+                                stroke="#94a3b8"
+                                tick={{ fill: '#94a3b8' }}
+                                tickFormatter={(value) => `R$ ${value / 1000}k`}
+                                tickLine={false}
+                                axisLine={false}
+                            />
+                            <Tooltip
+                                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#fff' }}
+                                formatter={(value: number) => [`R$ ${value.toLocaleString()}`, 'Saldo Projetado']}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="balance"
+                                stroke="#10b981"
+                                strokeWidth={3}
+                                fillOpacity={1}
+                                fill="url(#colorBalance)"
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
             {/* Filters & List */}
             <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-xl border border-white/5">
                 <div className="relative w-64">

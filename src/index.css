@@ -1,5 +1,37 @@
 @import "tailwindcss";
 
+@media print {
+
+  aside,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .glass-panel {
+    background: white !important;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    color: black !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
 :root {
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-surface: rgba(30, 41, 59, 0.7);

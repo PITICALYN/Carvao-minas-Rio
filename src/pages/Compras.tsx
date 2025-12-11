@@ -126,7 +126,12 @@ export const Compras = () => {
                             {order.items.map((item, idx) => (
                                 <div key={idx} className="flex justify-between">
                                     <span>{item.quantity}x {item.materialType}</span>
-                                    <span>R$ {item.total.toFixed(2)}</span>
+                                    <div className="text-right">
+                                        <span className="block">R$ {item.total.toFixed(2)}</span>
+                                        <span className="text-xs text-slate-500">
+                                            (R$ {item.unitPrice.toFixed(2)}/{item.materialType === 'Charcoal_Bulk' ? 'kg' : 'un'})
+                                        </span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -235,6 +240,11 @@ export const Compras = () => {
                                             onChange={e => setCurrentItem({ ...currentItem, unitPrice: Number(e.target.value) })}
                                             className="w-full input-field px-2 py-1 text-sm"
                                         />
+                                        {currentItem.unitPrice > 0 && (
+                                            <span className="text-xs text-emerald-400 block mt-1">
+                                                R$ {currentItem.unitPrice.toFixed(2)} / {currentItem.materialType === 'Charcoal_Bulk' ? 'kg' : 'un'}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                                 <button

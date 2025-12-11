@@ -1,13 +1,20 @@
-
+import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { type UserRole } from '../types';
-import { Factory, Building2, ShieldCheck } from 'lucide-react';
+import { User, Lock, AlertCircle } from 'lucide-react';
 
 export const Login = () => {
     const { login } = useAppStore();
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
 
-    const handleLogin = (role: UserRole) => {
-        login(role);
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (login(username, password)) {
+            setError('');
+        } else {
+            setError('Usuário ou senha incorretos');
+        }
     };
 
     return (
@@ -25,48 +32,51 @@ export const Login = () => {
                 </div>
 
                 <div className="glass-panel p-8 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-xl bg-slate-900/50">
-                    <h2 className="text-xl font-semibold text-white mb-6 text-center">Selecione seu acesso</h2>
+                    <h2 className="text-xl font-semibold text-white mb-6 text-center">Acesso ao Sistema</h2>
 
-                    <div className="space-y-4">
-                        <button
-                            onClick={() => handleLogin('Admin')}
-                            className="w-full p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group flex items-center gap-4"
-                        >
-                            <div className="p-3 rounded-lg bg-emerald-500/20 group-hover:bg-emerald-500/30 transition-colors">
-                                <ShieldCheck className="w-6 h-6 text-emerald-400" />
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {error && (
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm">
+                                <AlertCircle className="w-4 h-4" />
+                                {error}
                             </div>
-                            <div className="text-left">
-                                <p className="font-bold text-white">Administrador</p>
-                                <p className="text-xs text-slate-400">Acesso total ao sistema</p>
+                        )}
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-400 mb-1">Usuário</label>
+                            <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full bg-slate-950/50 border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                                    placeholder="Digite seu usuário"
+                                />
                             </div>
-                        </button>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-400 mb-1">Senha</label>
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full bg-slate-950/50 border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                                    placeholder="Digite sua senha"
+                                />
+                            </div>
+                        </div>
 
                         <button
-                            onClick={() => handleLogin('Factory')}
-                            className="w-full p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group flex items-center gap-4"
+                            type="submit"
+                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg transition-colors shadow-lg shadow-emerald-500/20 mt-6"
                         >
-                            <div className="p-3 rounded-lg bg-amber-500/20 group-hover:bg-amber-500/30 transition-colors">
-                                <Factory className="w-6 h-6 text-amber-400" />
-                            </div>
-                            <div className="text-left">
-                                <p className="font-bold text-white">Fábrica</p>
-                                <p className="text-xs text-slate-400">Gestão de produção e estoque</p>
-                            </div>
+                            Entrar
                         </button>
-
-                        <button
-                            onClick={() => handleLogin('Itaguai')}
-                            className="w-full p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group flex items-center gap-4"
-                        >
-                            <div className="p-3 rounded-lg bg-teal-500/20 group-hover:bg-teal-500/30 transition-colors">
-                                <Building2 className="w-6 h-6 text-teal-400" />
-                            </div>
-                            <div className="text-left">
-                                <p className="font-bold text-white">Itaguaí</p>
-                                <p className="text-xs text-slate-400">Gestão de vendas e estoque</p>
-                            </div>
-                        </button>
-                    </div>
+                    </form>
 
                     <div className="mt-8 text-center">
                         <p className="text-xs text-slate-500">

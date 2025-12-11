@@ -1,9 +1,9 @@
 import { useAppStore } from '../store/useAppStore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { TrendingUp, Award } from 'lucide-react';
+import { TrendingUp, Award, Printer, DollarSign } from 'lucide-react';
 
 export const Reports = () => {
-    const { suppliers, getSupplierStats, sales } = useAppStore();
+    const { suppliers, getSupplierStats, sales, currentUser } = useAppStore();
 
     // Supplier Data
     const supplierData = suppliers.map(s => {
@@ -27,11 +27,63 @@ export const Reports = () => {
         total
     }));
 
+    // Cost Analysis
+    const { productionBatches, transactions } = useAppStore();
+    const totalInputWeight = productionBatches.reduce((acc, batch) => acc + batch.inputWeightKg, 0);
+
+    // Calculate total purchase cost (Expenses with category 'Purchase')
+    // If no specific category 'Purchase' is strictly used yet, we might need to rely on 'Expense' type generally or filter by description/category if available.
+    // For now, let's assume all 'Expense' with category 'Purchase' or 'Operational' (if raw material is there) counts.
+    // Let's stick to 'Purchase' category for accuracy if the user uses it correctly.
+    const totalPurchaseCost = transactions
+        .filter(t => t.type === 'Expense' && (t.category === 'Purchase' || t.category === 'Operational'))
+        .reduce((acc, t) => acc + t.amount, 0);
+
+    const avgCostPerKg = totalInputWeight > 0 ? totalPurchaseCost / totalInputWeight : 0;
+
     return (
         <div className="space-y-8">
-            <div>
-                <h2 className="text-2xl font-bold text-white">Relatórios</h2>
-                <p className="text-slate-400">Análise de desempenho e financeiro.</p>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h2 className="text-2xl font-bold text-white">Relatórios</h2>
+                    <p className="text-slate-400">Análise de desempenho e financeiro.</p>
+                </div>
+                {(currentUser?.role === 'Admin' || currentUser?.canPrint) && (
+                    <button
+                        onClick={() => window.print()}
+                        className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors border border-white/10"
+                    >
+                        <Printer className="w-4 h-4" />
+                        Imprimir
+                    </button>
+                )}
+            </div>
+
+            {/* Cost Analysis Card */}
+            <div className="glass-panel p-6 rounded-2xl">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-emerald-400" />
+                    Análise de Custos (Estimativa)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="p-4 rounded-xl bg-slate-800/50 border border-white/5">
+                        <p className="text-sm text-slate-400 mb-1">Custo Médio Matéria Prima</p>
+                        <p className="text-2xl font-bold text-white">R$ {avgCostPerKg.toFixed(2)} <span className="text-sm font-normal text-slate-500">/ kg</span></p>
+                        <p className="text-xs text-slate-500 mt-2">Baseado em R$ {totalPurchaseCost.toLocaleString()} gastos / {totalInputWeight.toLocaleString()} kg entrada</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-slate-800/50 border border-white/5">
+                        <p className="text-sm text-slate-400 mb-1">Custo Saco 3kg</p>
+                        <p className="text-xl font-bold text-emerald-400">R$ {(avgCostPerKg * 3).toFixed(2)}</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-slate-800/50 border border-white/5">
+                        <p className="text-sm text-slate-400 mb-1">Custo Saco 5kg</p>
+                        <p className="text-xl font-bold text-emerald-400">R$ {(avgCostPerKg * 5).toFixed(2)}</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-slate-800/50 border border-white/5">
+                        <p className="text-sm text-slate-400 mb-1">Custo Paulistão (20kg)</p>
+                        <p className="text-xl font-bold text-emerald-400">R$ {(avgCostPerKg * 20).toFixed(2)}</p>
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

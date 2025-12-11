@@ -10,6 +10,7 @@ export const Sales = () => {
 
     // Form State
     const [location, setLocation] = useState<Location>(currentUser?.role === 'Itaguai' ? 'Itaguai' : 'Factory');
+    const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'Credit'>('Cash');
     const [customerName, setCustomerName] = useState('');
     const [items, setItems] = useState<{ type: ProductType; qty: string; price: string }[]>([
         { type: '3kg', qty: '', price: '' },
@@ -39,19 +40,24 @@ export const Sales = () => {
 
         if (finalItems.length === 0) return;
 
-        addSale({
-            id: crypto.randomUUID(),
-            date: new Date().toISOString().split('T')[0],
-            location,
-            customerName,
-            items: finalItems,
-            totalAmount: calculateTotal(),
-            timestamp: Date.now(),
-        });
+        try {
+            addSale({
+                id: crypto.randomUUID(),
+                date: new Date().toISOString().split('T')[0],
+                location,
+                customerName,
+                items: finalItems,
+                totalAmount: calculateTotal(),
+                paymentMethod,
+                timestamp: Date.now(),
+            });
 
-        setIsModalOpen(false);
-        setCustomerName('');
-        setItems([{ type: '3kg', qty: '', price: '' }]);
+            setIsModalOpen(false);
+            setCustomerName('');
+            setItems([{ type: '3kg', qty: '', price: '' }]);
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'Erro ao realizar venda');
+        }
     };
 
     return (
@@ -159,15 +165,27 @@ export const Sales = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Cliente (Opcional)</label>
-                                    <input
-                                        type="text"
-                                        value={customerName}
-                                        onChange={(e) => setCustomerName(e.target.value)}
+                                    <label className="block text-sm font-medium text-slate-300 mb-1">Forma de Pagamento</label>
+                                    <select
+                                        value={paymentMethod}
+                                        onChange={(e) => setPaymentMethod(e.target.value as 'Cash' | 'Credit')}
                                         className="w-full input-field px-4 py-2"
-                                        placeholder="Nome do cliente"
-                                    />
+                                    >
+                                        <option value="Cash">À Vista</option>
+                                        <option value="Credit">A Prazo</option>
+                                    </select>
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Cliente (Opcional)</label>
+                                <input
+                                    type="text"
+                                    value={customerName}
+                                    onChange={(e) => setCustomerName(e.target.value)}
+                                    className="w-full input-field px-4 py-2"
+                                    placeholder="Nome do cliente"
+                                />
                             </div>
 
                             <div>

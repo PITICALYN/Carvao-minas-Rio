@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { type Supplier, type ProductionBatch, type Sale, type InventoryState, type ProductType, type Location, type User, type UserRole, type Customer, type PurchaseOrder, type PurchaseStatus, type FinancialTransaction, type Driver, type Shipment, type PriceTable } from '../types';
+import { type Supplier, type ProductionBatch, type Sale, type InventoryState, type ProductType, type Location, type User, type Customer, type PurchaseOrder, type PurchaseStatus, type FinancialTransaction, type Driver, type Shipment, type PriceTable, type AuditLog, type AuditAction, type AuditResource } from '../types';
 
 interface AppState {
     suppliers: Supplier[];
@@ -18,8 +18,11 @@ interface AppState {
     getSupplierStats: (supplierId: string) => { totalInput: number, avgLoss: number };
     // Auth
     currentUser: User | null;
-    login: (role: UserRole) => void;
+    users: User[];
+    login: (username: string, password: string) => boolean;
     logout: () => void;
+    addUser: (user: User) => void;
+    removeUser: (id: string) => void;
 
     // --- New Modules ---
 
@@ -43,6 +46,10 @@ interface AppState {
     shipments: Shipment[];
     addDriver: (driver: Driver) => void;
     addShipment: (shipment: Shipment) => void;
+
+    // Audit Log
+    auditLogs: AuditLog[];
+    logAction: (userId: string, userName: string, action: AuditAction, resource: AuditResource, details: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -56,6 +63,9 @@ export const useAppStore = create<AppState>()(
                 Itaguai: { '3kg': 0, '5kg': 0, 'Paulistao': 0, 'Bulk': 0 },
             },
             currentUser: null,
+            users: [
+                { id: 'admin', name: 'Administrador', username: 'admin', password: '123', role: 'Admin' }
+            ],
 
             // New State Init
             customers: [],
@@ -64,15 +74,44 @@ export const useAppStore = create<AppState>()(
             transactions: [],
             drivers: [],
             shipments: [],
+            auditLogs: [],
 
-            login: (role) => {
-                const user: User = {
-                    id: role.toLowerCase(),
-                    name: role === 'Admin' ? 'Administrador' : role === 'Factory' ? 'Gerente Fábrica' : 'Gerente Itaguaí',
-                    role
-                };
-                set({ currentUser: user });
+            logAction: (userId, userName, action, resource, details) => set((state) => ({
+                auditLogs: [{
+                    id: crypto.randomUUID(),
+                    timestamp: Date.now(),
+                    userId,
+                    userName,
+                    action,
+                    resource,
+                    details
+                }, ...state.auditLogs]
+            })),
+
+            login: (username, password) => {
+                const state = get();
+                const user = state.users.find(u => u.username === username && u.password === password);
+
+                if (user) {
+                    // Don't store password in currentUser session
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    const { password: _, ...safeUser } = user;
+                    set({ currentUser: safeUser });
+
+                    // Log Login
+                    state.logAction(user.id, user.name, 'Login', 'User', 'User logged in');
+                    return true;
+                }
+                return false;
             },
+
+            addUser: (user) => set((state) => ({
+                users: [...state.users, user]
+            })),
+
+            removeUser: (id) => set((state) => ({
+                users: state.users.filter(u => u.id !== id)
+            })),
 
             logout: () => set({ currentUser: null }),
 
@@ -94,6 +133,23 @@ export const useAppStore = create<AppState>()(
             }),
 
             addSale: (sale) => set((state) => {
+                // Check Credit Limit if customer is selected
+                if (sale.customerName) {
+                    const customer = state.customers.find(c => c.name === sale.customerName);
+                    if (customer) {
+                        // Calculate current balance (Total Receivables - Total Paid)
+                        // For MVP, we'll just sum up all unpaid transactions for this customer
+                        // In a real app, we'd have a more robust balance calculation
+                        const currentDebt = state.transactions
+                            .filter(t => t.entityId === customer.id && t.type === 'Income' && t.status !== 'Paid')
+                            .reduce((acc, t) => acc + t.amount, 0);
+
+                        if (currentDebt + sale.totalAmount > customer.creditLimit) {
+                            throw new Error(`Limite de crédito excedido! Disponível: R$ ${(customer.creditLimit - currentDebt).toLocaleString()}`);
+                        }
+                    }
+                }
+
                 // Update inventory
                 const newInventory = { ...state.inventory };
                 sale.items.forEach(item => {
@@ -101,6 +157,15 @@ export const useAppStore = create<AppState>()(
                         newInventory[sale.location][item.productType] -= Number(item.quantity);
                     }
                 });
+
+                // Log Action
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Create',
+                    'Sale',
+                    `New Sale: R$ ${sale.totalAmount.toLocaleString()} to ${sale.customerName || 'Cash'}`
+                );
 
                 return {
                     sales: [sale, ...state.sales],

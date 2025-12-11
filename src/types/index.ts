@@ -58,6 +58,7 @@ export interface Sale {
     customerName?: string;
     items: SaleItem[];
     totalAmount: number;
+    paymentMethod: 'Cash' | 'Credit';
     timestamp: number;
 }
 
@@ -66,7 +67,10 @@ export type UserRole = 'Admin' | 'Factory' | 'Itaguai';
 export interface User {
     id: string;
     name: string;
+    username: string;
+    password?: string; // Optional for current user object (security), required for storage
     role: UserRole;
+    canPrint?: boolean;
 }
 
 // --- Module: Comercial ---
@@ -143,7 +147,16 @@ export interface Shipment {
     status: 'Planned' | 'InTransit' | 'Delivered';
 }
 
-// --- Enhanced Sale Type ---
-// We will extend the existing Sale interface in the future or use intersection types if needed.
-// For now, we keep the existing Sale as is to avoid breaking changes immediately, 
-// but we will need to migrate it to include customerId and status.
+// --- Advanced Control: Audit Log ---
+export type AuditAction = 'Login' | 'Create' | 'Update' | 'Delete' | 'Approve' | 'Reject';
+export type AuditResource = 'User' | 'Product' | 'Stock' | 'Sale' | 'Purchase' | 'Financial';
+
+export interface AuditLog {
+    id: string;
+    timestamp: number;
+    userId: string;
+    userName: string;
+    action: AuditAction;
+    resource: AuditResource;
+    details: string;
+}

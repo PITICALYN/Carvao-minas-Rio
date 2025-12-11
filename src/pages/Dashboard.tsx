@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Package, AlertTriangle, DollarSign } from 'lucide-react';
+import { Package, AlertTriangle, DollarSign, Printer } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, color }: { title: string; value: string; icon: React.ElementType; color: string }) => (
     <div className="glass-card p-6 rounded-2xl flex items-center gap-4">
@@ -15,7 +15,7 @@ const StatCard = ({ title, value, icon: Icon, color }: { title: string; value: s
 );
 
 export const Dashboard = () => {
-    const { inventory, sales, productionBatches } = useAppStore();
+    const { inventory, sales, productionBatches, currentUser } = useAppStore();
 
     const totalStockFactory = Object.values(inventory.Factory).reduce((a, b) => a + b, 0);
     const totalStockItaguai = Object.values(inventory.Itaguai).reduce((a, b) => a + b, 0);
@@ -28,9 +28,20 @@ export const Dashboard = () => {
 
     return (
         <div className="space-y-8">
-            <div>
-                <h2 className="text-2xl font-bold text-white">Visão Geral</h2>
-                <p className="text-slate-400">Bem-vindo ao painel de controle da Carvoaria.</p>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h2 className="text-2xl font-bold text-white">Visão Geral</h2>
+                    <p className="text-slate-400">Bem-vindo ao painel de controle da Carvoaria.</p>
+                </div>
+                {(currentUser?.role === 'Admin' || currentUser?.canPrint) && (
+                    <button
+                        onClick={() => window.print()}
+                        className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors border border-white/10"
+                    >
+                        <Printer className="w-4 h-4" />
+                        Imprimir
+                    </button>
+                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
