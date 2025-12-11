@@ -1,0 +1,80 @@
+import React from 'react';
+import { Link, useLocation, Outlet } from 'react-router-dom';
+import { LayoutDashboard, Truck, Factory, Package, ShoppingCart, LogOut, User, Users, ShoppingBag, DollarSign, PieChart } from 'lucide-react';
+import clsx from 'clsx';
+import { useAppStore } from '../store/useAppStore';
+
+const NavItem = ({ to, icon: Icon, label }: { to: string; icon: React.ElementType; label: string }) => {
+    const location = useLocation();
+    const isActive = location.pathname === to;
+
+    return (
+        <Link
+            to={to}
+            className={clsx(
+                'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group',
+                isActive
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+            )}
+        >
+            <Icon className={clsx('w-5 h-5 transition-transform group-hover:scale-110', isActive && 'animate-pulse')} />
+            <span className="font-medium">{label}</span>
+        </Link>
+    );
+};
+
+export const Layout = () => {
+
+    const { currentUser, logout } = useAppStore();
+
+    return (
+        <div className="flex h-screen overflow-hidden">
+            {/* Sidebar */}
+            <aside className="w-64 glass-panel border-r border-white/5 flex flex-col z-20">
+                <div className="p-8 flex flex-col items-center">
+                    <img src="/logo.jpg" alt="Minas Rio" className="h-24 w-auto mb-2 rounded-lg" />
+                    <p className="text-xs text-slate-400">Gestão Inteligente</p>
+                </div>
+
+                <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+                    <NavItem to="/" icon={LayoutDashboard} label="Dashboard" />
+                    <NavItem to="/comercial" icon={Users} label="Comercial" />
+                    <NavItem to="/vendas" icon={ShoppingCart} label="Vendas" />
+                    <NavItem to="/compras" icon={ShoppingBag} label="Compras" />
+                    <NavItem to="/estoque" icon={Package} label="Estoque" />
+                    <NavItem to="/production" icon={Factory} label="Produção" />
+                    <NavItem to="/expedicao" icon={Truck} label="Expedição" />
+                    <NavItem to="/financeiro" icon={DollarSign} label="Financeiro" />
+                    <NavItem to="/controladoria" icon={PieChart} label="Controladoria" />
+                </nav>
+
+                <div className="p-4 border-t border-white/10">
+                    <div className="flex items-center gap-3 mb-4 px-2">
+                        <div className="p-2 bg-emerald-500/20 rounded-full">
+                            <User className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-white">{currentUser?.name}</p>
+                            <p className="text-xs text-slate-400">{currentUser?.role === 'Admin' ? 'Administrador' : currentUser?.role === 'Factory' ? 'Fábrica' : 'Itaguaí'}</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={logout}
+                        className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-300 group"
+                    >
+                        <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        <span className="font-medium">Sair</span>
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Content */}
+            <main className="flex-1 p-8 overflow-y-auto">
+                <div className="max-w-7xl mx-auto">
+                    <Outlet />
+                </div>
+            </main>
+        </div>
+    );
+};
