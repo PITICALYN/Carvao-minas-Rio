@@ -4,6 +4,7 @@ export interface Supplier {
     id: string;
     name: string;
     contact?: string;
+    document?: string; // CPF/CNPJ
 }
 
 export type ProductType = '3kg' | '5kg' | 'Paulistao' | 'Bulk';

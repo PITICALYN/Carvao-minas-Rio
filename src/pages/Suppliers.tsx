@@ -7,6 +7,7 @@ export const Suppliers = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newSupplierName, setNewSupplierName] = useState('');
     const [newSupplierContact, setNewSupplierContact] = useState('');
+    const [newSupplierDocument, setNewSupplierDocument] = useState('');
 
     const handleAddSupplier = (e: React.FormEvent) => {
         e.preventDefault();
@@ -16,10 +17,12 @@ export const Suppliers = () => {
             id: crypto.randomUUID(),
             name: newSupplierName,
             contact: newSupplierContact,
+            document: newSupplierDocument,
         });
 
         setNewSupplierName('');
         setNewSupplierContact('');
+        setNewSupplierDocument('');
         setIsModalOpen(false);
     };
 
@@ -51,9 +54,15 @@ export const Suppliers = () => {
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-white">{supplier.name}</h3>
-                                        <div className="flex items-center gap-1 text-xs text-slate-400 mt-1">
-                                            <Phone className="w-3 h-3" />
-                                            {supplier.contact || 'Sem contato'}
+                                        <div className="flex flex-col gap-1 mt-1">
+                                            <div className="flex items-center gap-1 text-xs text-slate-400">
+                                                <span className="font-medium">Doc:</span>
+                                                {supplier.document || 'N/A'}
+                                            </div>
+                                            <div className="flex items-center gap-1 text-xs text-slate-400">
+                                                <Phone className="w-3 h-3" />
+                                                {supplier.contact || 'Sem contato'}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -98,6 +107,16 @@ export const Suppliers = () => {
                                     className="w-full input-field px-4 py-2"
                                     placeholder="Ex: Carvoaria do João"
                                     autoFocus
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">CPF / CNPJ</label>
+                                <input
+                                    type="text"
+                                    value={newSupplierDocument}
+                                    onChange={(e) => setNewSupplierDocument(e.target.value)}
+                                    className="w-full input-field px-4 py-2"
+                                    placeholder="000.000.000-00"
                                 />
                             </div>
                             <div>

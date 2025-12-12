@@ -70,7 +70,10 @@ export const Layout = () => {
 
                     {/* Purchasing - Admin Only (for now) */}
                     {currentUser?.role === 'Admin' && (
-                        <NavItem to="/compras" icon={ShoppingBag} label="Compras" />
+                        <>
+                            <NavItem to="/compras" icon={ShoppingBag} label="Compras" />
+                            <NavItem to="/suppliers" icon={User} label="Fornecedores" />
+                        </>
                     )}
 
                     {/* Inventory & Shipping - Everyone (Filtered by location in page) */}
