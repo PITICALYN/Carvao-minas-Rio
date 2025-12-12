@@ -20,23 +20,25 @@ export const Compras = () => {
     const [currentItem, setCurrentItem] = useState<{
         materialType: MaterialType;
         quantity: number;
+        unitPrice: number;
         total: number;
     }>({
         materialType: 'Eucalyptus',
         quantity: 0,
+        unitPrice: 0,
         total: 0
     });
 
     const addItem = () => {
-        if (currentItem.quantity <= 0 || currentItem.total <= 0) return;
+        if (currentItem.quantity <= 0 || currentItem.unitPrice <= 0) return;
 
-        const unitPrice = currentItem.total / currentItem.quantity;
+        const total = currentItem.quantity * currentItem.unitPrice;
         const newItem = {
             materialType: currentItem.materialType,
             quantity: currentItem.quantity,
-            unitPrice: unitPrice,
+            unitPrice: currentItem.unitPrice,
             description: `${currentItem.materialType} - ${currentItem.quantity} units`,
-            total: currentItem.total
+            total: total
         };
 
         const updatedItems = [...(newOrder.items || []), newItem];
@@ -48,7 +50,7 @@ export const Compras = () => {
             totalAmount: orderTotal
         });
 
-        setCurrentItem({ materialType: 'Eucalyptus', quantity: 0, total: 0 });
+        setCurrentItem({ materialType: 'Eucalyptus', quantity: 0, unitPrice: 0, total: 0 });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -251,7 +253,7 @@ export const Compras = () => {
                                 {/* Add Items Section */}
                                 <div className="bg-slate-800/50 p-4 rounded-xl space-y-4">
                                     <h3 className="text-sm font-medium text-white">Adicionar Itens</h3>
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-4 gap-3">
                                         <div>
                                             <label className="block text-xs text-slate-400 mb-1">Material</label>
                                             <select
@@ -273,7 +275,14 @@ export const Compras = () => {
                                                 type="number"
                                                 placeholder="Qtd"
                                                 value={currentItem.quantity || ''}
-                                                onChange={e => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
+                                                onChange={e => {
+                                                    const quantity = Number(e.target.value);
+                                                    setCurrentItem({
+                                                        ...currentItem,
+                                                        quantity,
+                                                        total: quantity * currentItem.unitPrice
+                                                    });
+                                                }}
                                                 className="w-full input-field px-2 py-1 text-sm"
                                             />
                                             {currentItem.quantity > 0 && (
@@ -283,19 +292,31 @@ export const Compras = () => {
                                             )}
                                         </div>
                                         <div>
+                                            <label className="block text-xs text-slate-400 mb-1">Valor Unitário (R$)</label>
+                                            <input
+                                                type="number"
+                                                placeholder="R$ Unit."
+                                                value={currentItem.unitPrice || ''}
+                                                onChange={e => {
+                                                    const unitPrice = Number(e.target.value);
+                                                    setCurrentItem({
+                                                        ...currentItem,
+                                                        unitPrice,
+                                                        total: currentItem.quantity * unitPrice
+                                                    });
+                                                }}
+                                                className="w-full input-field px-2 py-1 text-sm"
+                                            />
+                                        </div>
+                                        <div>
                                             <label className="block text-xs text-slate-400 mb-1">Valor Total (R$)</label>
                                             <input
                                                 type="number"
                                                 placeholder="R$ Total"
                                                 value={currentItem.total || ''}
-                                                onChange={e => setCurrentItem({ ...currentItem, total: Number(e.target.value) })}
-                                                className="w-full input-field px-2 py-1 text-sm"
+                                                readOnly
+                                                className="w-full input-field px-2 py-1 text-sm bg-slate-900 text-slate-500 cursor-not-allowed"
                                             />
-                                            {currentItem.quantity > 0 && currentItem.total > 0 && (
-                                                <span className="text-xs text-emerald-400 block mt-1">
-                                                    Unit: R$ {(currentItem.total / currentItem.quantity).toFixed(2)}
-                                                </span>
-                                            )}
                                         </div>
                                     </div>
                                     <button
@@ -335,7 +356,7 @@ export const Compras = () => {
                                         type="submit"
                                         className="btn-primary px-6 py-2 rounded-lg"
                                     >
-                                        Salvar Pedido
+                                        Salvar Compra
                                     </button>
                                 </div>
                             </form>
