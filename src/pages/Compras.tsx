@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Search, Calendar } from 'lucide-react';
+import { Plus, Search, Calendar, Edit } from 'lucide-react';
 import { type PurchaseOrder, type MaterialType } from '../types';
 
 export const Compras = () => {
-    const { purchaseOrders, addPurchaseOrder, suppliers } = useAppStore();
+    const { purchaseOrders, addPurchaseOrder, updatePurchaseOrder, suppliers, currentUser } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Form State
@@ -55,8 +55,8 @@ export const Compras = () => {
         e.preventDefault();
         if (!newOrder.supplierId || !newOrder.items?.length) return;
 
-        addPurchaseOrder({
-            id: crypto.randomUUID(),
+        const orderData = {
+            id: newOrder.id || crypto.randomUUID(),
             supplierId: newOrder.supplierId,
             date: newOrder.date || new Date().toISOString(),
             status: newOrder.status || 'Pending',
@@ -64,7 +64,13 @@ export const Compras = () => {
             totalAmount: newOrder.totalAmount || 0,
             manifestNumber: newOrder.manifestNumber,
             originAuthorizationNumber: newOrder.originAuthorizationNumber
-        } as PurchaseOrder);
+        } as PurchaseOrder;
+
+        if (newOrder.id) {
+            updatePurchaseOrder(orderData);
+        } else {
+            addPurchaseOrder(orderData);
+        }
 
         setIsModalOpen(false);
         setNewOrder({ supplierId: '', date: new Date().toISOString().split('T')[0], status: 'Pending', items: [], totalAmount: 0 });
@@ -138,11 +144,23 @@ export const Compras = () => {
                             ))}
                         </div>
 
-                        <div className="pt-4 border-t border-white/5 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <span className="text-slate-400 text-sm">Total</span>
-                                <span className="text-xl font-bold text-white">R$ {order.totalAmount.toLocaleString()}</span>
-                            </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-slate-400 text-sm">Total</span>
+                            <span className="text-xl font-bold text-white">R$ {order.totalAmount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex gap-2">
+                            {currentUser?.role === 'Admin' && (
+                                <button
+                                    onClick={() => {
+                                        setNewOrder(order);
+                                        setIsModalOpen(true);
+                                    }}
+                                    className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                    title="Editar Pedido"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                </button>
+                            )}
                             {order.status === 'Pending' && (
                                 <button
                                     onClick={() => {
@@ -152,7 +170,7 @@ export const Compras = () => {
                                     }}
                                     className="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-500/20 transition-colors"
                                 >
-                                    Marcar como Recebido
+                                    Receber
                                 </button>
                             )}
                         </div>
@@ -167,162 +185,164 @@ export const Compras = () => {
             </div>
 
             {/* New Purchase Order Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold text-white mb-4">Nova Compra</h2>
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Fornecedor</label>
-                                    <select
-                                        required
-                                        value={newOrder.supplierId}
-                                        onChange={e => setNewOrder({ ...newOrder, supplierId: e.target.value })}
-                                        className="w-full input-field px-4 py-2"
-                                    >
-                                        <option value="">Selecione...</option>
-                                        {suppliers.map(s => (
-                                            <option key={s.id} value={s.id}>{s.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Data</label>
-                                    <input
-                                        type="date"
-                                        value={newOrder.date}
-                                        onChange={e => setNewOrder({ ...newOrder, date: e.target.value })}
-                                        className="w-full input-field px-4 py-2"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Status</label>
-                                    <select
-                                        value={newOrder.status}
-                                        onChange={e => setNewOrder({ ...newOrder, status: e.target.value as any })}
-                                        className="w-full input-field px-4 py-2"
-                                    >
-                                        <option value="Pending">Pendente</option>
-                                        <option value="Received">Recebido</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Nº Manifesto</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Ex: 123456"
-                                        value={newOrder.manifestNumber || ''}
-                                        onChange={e => setNewOrder({ ...newOrder, manifestNumber: e.target.value })}
-                                        className="w-full input-field px-4 py-2"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Aut. Origem</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Ex: AO-98765"
-                                        value={newOrder.originAuthorizationNumber || ''}
-                                        onChange={e => setNewOrder({ ...newOrder, originAuthorizationNumber: e.target.value })}
-                                        className="w-full input-field px-4 py-2"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Add Items Section */}
-                            <div className="bg-slate-800/50 p-4 rounded-xl space-y-4">
-                                <h3 className="text-sm font-medium text-white">Adicionar Itens</h3>
-                                <div className="grid grid-cols-3 gap-3">
+            {
+                isModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                            <h2 className="text-xl font-bold text-white mb-4">Nova Compra</h2>
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs text-slate-400 mb-1">Material</label>
+                                        <label className="block text-sm font-medium text-slate-300 mb-1">Fornecedor</label>
                                         <select
-                                            value={currentItem.materialType}
-                                            onChange={e => setCurrentItem({ ...currentItem, materialType: e.target.value as MaterialType })}
-                                            className="w-full input-field px-2 py-1 text-sm"
+                                            required
+                                            value={newOrder.supplierId}
+                                            onChange={e => setNewOrder({ ...newOrder, supplierId: e.target.value })}
+                                            className="w-full input-field px-4 py-2"
                                         >
-                                            <option value="Eucalyptus">Eucalipto</option>
-                                            <option value="Pinus">Pinus</option>
-                                            <option value="EmptyBag_3kg">Saco 3kg</option>
-                                            <option value="EmptyBag_5kg">Saco 5kg</option>
-                                            <option value="EmptyBag_Paulistao">Saco Paulistão</option>
-                                            <option value="Other">Outro</option>
+                                            <option value="">Selecione...</option>
+                                            {suppliers.map(s => (
+                                                <option key={s.id} value={s.id}>{s.name}</option>
+                                            ))}
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-slate-400 mb-1">Quantidade (Kg/Un)</label>
+                                        <label className="block text-sm font-medium text-slate-300 mb-1">Data</label>
                                         <input
-                                            type="number"
-                                            placeholder="Qtd"
-                                            value={currentItem.quantity || ''}
-                                            onChange={e => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
-                                            className="w-full input-field px-2 py-1 text-sm"
+                                            type="date"
+                                            value={newOrder.date}
+                                            onChange={e => setNewOrder({ ...newOrder, date: e.target.value })}
+                                            className="w-full input-field px-4 py-2"
                                         />
-                                        {currentItem.quantity > 0 && (
-                                            <span className="text-xs text-slate-500 block mt-1">
-                                                {currentItem.quantity.toLocaleString('pt-BR')} {currentItem.materialType === 'Charcoal_Bulk' ? 'kg' : 'un'}
-                                            </span>
-                                        )}
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-slate-400 mb-1">Valor Total (R$)</label>
+                                        <label className="block text-sm font-medium text-slate-300 mb-1">Status</label>
+                                        <select
+                                            value={newOrder.status}
+                                            onChange={e => setNewOrder({ ...newOrder, status: e.target.value as any })}
+                                            className="w-full input-field px-4 py-2"
+                                        >
+                                            <option value="Pending">Pendente</option>
+                                            <option value="Received">Recebido</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-1">Nº Manifesto</label>
                                         <input
-                                            type="number"
-                                            placeholder="R$ Total"
-                                            value={currentItem.total || ''}
-                                            onChange={e => setCurrentItem({ ...currentItem, total: Number(e.target.value) })}
-                                            className="w-full input-field px-2 py-1 text-sm"
+                                            type="text"
+                                            placeholder="Ex: 123456"
+                                            value={newOrder.manifestNumber || ''}
+                                            onChange={e => setNewOrder({ ...newOrder, manifestNumber: e.target.value })}
+                                            className="w-full input-field px-4 py-2"
                                         />
-                                        {currentItem.quantity > 0 && currentItem.total > 0 && (
-                                            <span className="text-xs text-emerald-400 block mt-1">
-                                                Unit: R$ {(currentItem.total / currentItem.quantity).toFixed(2)}
-                                            </span>
-                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-1">Aut. Origem</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ex: AO-98765"
+                                            value={newOrder.originAuthorizationNumber || ''}
+                                            onChange={e => setNewOrder({ ...newOrder, originAuthorizationNumber: e.target.value })}
+                                            className="w-full input-field px-4 py-2"
+                                        />
                                     </div>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={addItem}
-                                    className="w-full btn-primary py-2 rounded-lg text-sm flex justify-center items-center gap-2"
-                                >
-                                    <Plus className="w-4 h-4" /> Adicionar Item
-                                </button>
 
-                                {/* Items List */}
-                                {newOrder.items && newOrder.items.length > 0 && (
-                                    <div className="mt-4 space-y-2">
-                                        {newOrder.items.map((item, idx) => (
-                                            <div key={idx} className="flex justify-between items-center bg-slate-950 p-2 rounded text-sm">
-                                                <span className="text-slate-300">{item.quantity}x {item.materialType}</span>
-                                                <span className="text-white">R$ {item.total.toFixed(2)}</span>
-                                            </div>
-                                        ))}
-                                        <div className="flex justify-between items-center pt-2 border-t border-white/10 font-bold">
-                                            <span className="text-slate-400">Total do Pedido</span>
-                                            <span className="text-white">R$ {newOrder.totalAmount?.toFixed(2)}</span>
+                                {/* Add Items Section */}
+                                <div className="bg-slate-800/50 p-4 rounded-xl space-y-4">
+                                    <h3 className="text-sm font-medium text-white">Adicionar Itens</h3>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div>
+                                            <label className="block text-xs text-slate-400 mb-1">Material</label>
+                                            <select
+                                                value={currentItem.materialType}
+                                                onChange={e => setCurrentItem({ ...currentItem, materialType: e.target.value as MaterialType })}
+                                                className="w-full input-field px-2 py-1 text-sm"
+                                            >
+                                                <option value="Eucalyptus">Eucalipto</option>
+                                                <option value="Pinus">Pinus</option>
+                                                <option value="EmptyBag_3kg">Saco 3kg</option>
+                                                <option value="EmptyBag_5kg">Saco 5kg</option>
+                                                <option value="EmptyBag_Paulistao">Saco Paulistão</option>
+                                                <option value="Other">Outro</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-slate-400 mb-1">Quantidade (Kg/Un)</label>
+                                            <input
+                                                type="number"
+                                                placeholder="Qtd"
+                                                value={currentItem.quantity || ''}
+                                                onChange={e => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
+                                                className="w-full input-field px-2 py-1 text-sm"
+                                            />
+                                            {currentItem.quantity > 0 && (
+                                                <span className="text-xs text-slate-500 block mt-1">
+                                                    {currentItem.quantity.toLocaleString('pt-BR')} {currentItem.materialType === 'Charcoal_Bulk' ? 'kg' : 'un'}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-slate-400 mb-1">Valor Total (R$)</label>
+                                            <input
+                                                type="number"
+                                                placeholder="R$ Total"
+                                                value={currentItem.total || ''}
+                                                onChange={e => setCurrentItem({ ...currentItem, total: Number(e.target.value) })}
+                                                className="w-full input-field px-2 py-1 text-sm"
+                                            />
+                                            {currentItem.quantity > 0 && currentItem.total > 0 && (
+                                                <span className="text-xs text-emerald-400 block mt-1">
+                                                    Unit: R$ {(currentItem.total / currentItem.quantity).toFixed(2)}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
-                                )}
-                            </div>
+                                    <button
+                                        type="button"
+                                        onClick={addItem}
+                                        className="w-full btn-primary py-2 rounded-lg text-sm flex justify-center items-center gap-2"
+                                    >
+                                        <Plus className="w-4 h-4" /> Adicionar Item
+                                    </button>
 
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="px-4 py-2 text-slate-300 hover:text-white transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="btn-primary px-6 py-2 rounded-lg"
-                                >
-                                    Salvar Pedido
-                                </button>
-                            </div>
-                        </form>
+                                    {/* Items List */}
+                                    {newOrder.items && newOrder.items.length > 0 && (
+                                        <div className="mt-4 space-y-2">
+                                            {newOrder.items.map((item, idx) => (
+                                                <div key={idx} className="flex justify-between items-center bg-slate-950 p-2 rounded text-sm">
+                                                    <span className="text-slate-300">{item.quantity}x {item.materialType}</span>
+                                                    <span className="text-white">R$ {item.total.toFixed(2)}</span>
+                                                </div>
+                                            ))}
+                                            <div className="flex justify-between items-center pt-2 border-t border-white/10 font-bold">
+                                                <span className="text-slate-400">Total do Pedido</span>
+                                                <span className="text-white">R$ {newOrder.totalAmount?.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsModalOpen(false)}
+                                        className="px-4 py-2 text-slate-300 hover:text-white transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="btn-primary px-6 py-2 rounded-lg"
+                                    >
+                                        Salvar Pedido
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };

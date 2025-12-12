@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType, type Location, type Sale } from '../types';
-import { Plus, Printer, FileText, X } from 'lucide-react';
+import { Plus, Printer, FileText, X, Edit } from 'lucide-react';
 
 export const Sales = () => {
-    const { sales, addSale, currentUser } = useAppStore();
+    const { sales, addSale, updateSale, currentUser } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+    const [currentSaleId, setCurrentSaleId] = useState<string | null>(null);
 
     // Form State
     const [location, setLocation] = useState<Location>(currentUser?.role === 'Itaguai' ? 'Itaguai' : 'Factory');
@@ -41,23 +42,53 @@ export const Sales = () => {
         if (finalItems.length === 0) return;
 
         try {
-            addSale({
-                id: crypto.randomUUID(),
+            const saleData = {
+                id: currentSaleId || crypto.randomUUID(),
                 date: new Date().toISOString().split('T')[0],
                 location,
                 customerName,
                 items: finalItems,
                 totalAmount: calculateTotal(),
                 paymentMethod,
-                timestamp: Date.now(),
-            });
+                timestamp: currentSaleId ? sales.find(s => s.id === currentSaleId)?.timestamp || Date.now() : Date.now(),
+            };
+
+            if (currentSaleId) {
+                updateSale(saleData);
+            } else {
+                addSale(saleData);
+            }
 
             setIsModalOpen(false);
+            setCurrentSaleId(null);
             setCustomerName('');
             setItems([{ type: '3kg', qty: '', price: '' }]);
         } catch (error) {
             alert(error instanceof Error ? error.message : 'Erro ao realizar venda');
         }
+    };
+
+    const handleEdit = (sale: Sale) => {
+        setCurrentSaleId(sale.id);
+        setLocation(sale.location);
+        setPaymentMethod(sale.paymentMethod);
+        setCustomerName(sale.customerName || '');
+
+        const newItems = sale.items.map(item => ({
+            type: item.productType,
+            qty: item.quantity.toString(),
+            price: item.unitPrice.toString()
+        }));
+
+        setItems(newItems);
+        setIsModalOpen(true);
+    };
+
+    const handleNew = () => {
+        setCurrentSaleId(null);
+        setCustomerName('');
+        setItems([{ type: '3kg', qty: '', price: '' }]);
+        setIsModalOpen(true);
     };
 
     return (
@@ -68,7 +99,7 @@ export const Sales = () => {
                     <p className="text-slate-400">Registre vendas e saídas de produtos.</p>
                 </div>
                 <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleNew}
                     className="btn-primary px-4 py-2 rounded-lg flex items-center gap-2"
                 >
                     <Plus className="w-5 h-5" />
@@ -123,13 +154,24 @@ export const Sales = () => {
                                         R$ {sale.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <button
-                                            onClick={() => setSelectedSale(sale)}
-                                            className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-400 transition-colors"
-                                            title="Gerar Romaneio"
-                                        >
-                                            <FileText className="w-5 h-5" />
-                                        </button>
+                                        <div className="flex gap-2">
+                                            {currentUser?.role === 'Admin' && (
+                                                <button
+                                                    onClick={() => handleEdit(sale)}
+                                                    className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-400 transition-colors"
+                                                    title="Editar Venda"
+                                                >
+                                                    <Edit className="w-5 h-5" />
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => setSelectedSale(sale)}
+                                                className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-400 transition-colors"
+                                                title="Gerar Romaneio"
+                                            >
+                                                <FileText className="w-5 h-5" />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

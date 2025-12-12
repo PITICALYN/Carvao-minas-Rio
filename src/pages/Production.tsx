@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType } from '../types';
-import { Plus, Scale } from 'lucide-react';
+import { Plus, Scale, Edit } from 'lucide-react';
 
 export const Production = () => {
-    const { suppliers, productionBatches, addProductionBatch } = useAppStore();
+    const { suppliers, productionBatches, addProductionBatch, updateProductionBatch, currentUser } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentBatchId, setCurrentBatchId] = useState<string | null>(null);
 
     // Form State
     const [supplierId, setSupplierId] = useState('');
@@ -63,24 +64,64 @@ export const Production = () => {
 
         const loss = ((input - totalOutputKg) / input) * 100;
 
-        addProductionBatch({
-            id: crypto.randomUUID(),
+        const batchData = {
+            id: currentBatchId || crypto.randomUUID(),
             supplierId,
             date: new Date().toISOString().split('T')[0],
             inputWeightKg: input,
             outputs: finalOutputs,
             totalOutputWeightKg: totalOutputKg,
             lossPercentage: loss,
-            timestamp: Date.now(),
-        });
+            timestamp: currentBatchId ? productionBatches.find(b => b.id === currentBatchId)?.timestamp || Date.now() : Date.now(),
+        };
+
+        if (currentBatchId) {
+            updateProductionBatch(batchData);
+        } else {
+            addProductionBatch(batchData);
+        }
 
         setIsModalOpen(false);
+        setCurrentBatchId(null);
+        setSupplierId('');
         setInputWeight('');
         setOutputs([
             { type: '3kg', qty: '' },
             { type: '5kg', qty: '' },
             { type: 'Paulistao', qty: '' },
         ]);
+    };
+
+    const handleEdit = (batch: any) => {
+        setCurrentBatchId(batch.id);
+        setSupplierId(batch.supplierId);
+        setInputWeight(batch.inputWeightKg.toString());
+
+        const newOutputs = [
+            { type: '3kg', qty: '' },
+            { type: '5kg', qty: '' },
+            { type: 'Paulistao', qty: '' },
+        ] as { type: ProductType; qty: string }[];
+
+        batch.outputs.forEach((o: any) => {
+            const idx = newOutputs.findIndex(no => no.type === o.productType);
+            if (idx >= 0) newOutputs[idx].qty = o.quantity.toString();
+        });
+
+        setOutputs(newOutputs);
+        setIsModalOpen(true);
+    };
+
+    const handleNew = () => {
+        setCurrentBatchId(null);
+        setSupplierId('');
+        setInputWeight('');
+        setOutputs([
+            { type: '3kg', qty: '' },
+            { type: '5kg', qty: '' },
+            { type: 'Paulistao', qty: '' },
+        ]);
+        setIsModalOpen(true);
     };
 
     return (
@@ -91,7 +132,7 @@ export const Production = () => {
                     <p className="text-slate-400">Registre a entrada de matéria-prima e saída de sacos.</p>
                 </div>
                 <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleNew}
                     className="btn-primary px-4 py-2 rounded-lg flex items-center gap-2"
                 >
                     <Plus className="w-5 h-5" />
@@ -108,6 +149,7 @@ export const Production = () => {
                             <th className="px-6 py-4 text-sm font-semibold text-slate-300">Entrada (kg)</th>
                             <th className="px-6 py-4 text-sm font-semibold text-slate-300">Saída (Sacos)</th>
                             <th className="px-6 py-4 text-sm font-semibold text-slate-300">Perda</th>
+                            <th className="px-6 py-4 text-sm font-semibold text-slate-300">Ações</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -138,6 +180,17 @@ export const Production = () => {
                                             }`}>
                                             {batch.lossPercentage.toFixed(1)}%
                                         </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {currentUser?.role === 'Admin' && (
+                                            <button
+                                                onClick={() => handleEdit(batch)}
+                                                className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                title="Editar Produção"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             );

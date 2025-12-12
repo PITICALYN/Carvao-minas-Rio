@@ -37,6 +37,9 @@ interface AppState {
     purchaseOrders: PurchaseOrder[];
     addPurchaseOrder: (po: PurchaseOrder) => void;
     updatePurchaseOrderStatus: (id: string, status: PurchaseStatus) => void;
+    updatePurchaseOrder: (po: PurchaseOrder) => void;
+    updateProductionBatch: (batch: ProductionBatch) => void;
+    updateSale: (sale: Sale) => void;
 
     // Financeiro
     transactions: FinancialTransaction[];
@@ -229,6 +232,81 @@ export const useAppStore = create<AppState>()(
                     po.id === id ? { ...po, status } : po
                 )
             })),
+
+            updatePurchaseOrder: (updatedPo) => set((state) => {
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Purchase',
+                    `Updated Purchase Order: ${updatedPo.id}`
+                );
+                return {
+                    purchaseOrders: state.purchaseOrders.map(po => po.id === updatedPo.id ? updatedPo : po)
+                };
+            }),
+
+            updateProductionBatch: (updatedBatch) => set((state) => {
+                const oldBatch = state.productionBatches.find(b => b.id === updatedBatch.id);
+                const newInventory = { ...state.inventory };
+
+                if (oldBatch) {
+                    // Revert old inventory addition
+                    oldBatch.outputs.forEach(output => {
+                        newInventory.Factory[output.productType] -= Number(output.quantity);
+                    });
+                }
+
+                // Apply new inventory addition
+                updatedBatch.outputs.forEach(output => {
+                    newInventory.Factory[output.productType] += Number(output.quantity);
+                });
+
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Stock',
+                    `Updated Production Batch: ${updatedBatch.id}`
+                );
+
+                return {
+                    productionBatches: state.productionBatches.map(b => b.id === updatedBatch.id ? updatedBatch : b),
+                    inventory: newInventory
+                };
+            }),
+
+            updateSale: (updatedSale) => set((state) => {
+                const oldSale = state.sales.find(s => s.id === updatedSale.id);
+                const newInventory = { ...state.inventory };
+
+                if (oldSale) {
+                    // Revert old inventory deduction (Add back)
+                    oldSale.items.forEach(item => {
+                        newInventory[oldSale.location][item.productType] += Number(item.quantity);
+                    });
+                }
+
+                // Apply new inventory deduction
+                updatedSale.items.forEach(item => {
+                    if (newInventory[updatedSale.location][item.productType] >= Number(item.quantity)) {
+                        newInventory[updatedSale.location][item.productType] -= Number(item.quantity);
+                    }
+                });
+
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Sale',
+                    `Updated Sale: ${updatedSale.id}`
+                );
+
+                return {
+                    sales: state.sales.map(s => s.id === updatedSale.id ? updatedSale : s),
+                    inventory: newInventory
+                };
+            }),
 
 
         }),
