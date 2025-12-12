@@ -28,7 +28,6 @@ export const Layout = () => {
     const { currentUser, logout } = useAppStore();
 
     const [isChangePasswordOpen, setIsChangePasswordOpen] = React.useState(false);
-    const [currentPassword, setCurrentPassword] = React.useState('');
     const [newPassword, setNewPassword] = React.useState('');
     const [confirmPassword, setConfirmPassword] = React.useState('');
 
@@ -44,7 +43,6 @@ export const Layout = () => {
             useAppStore.getState().updateUserPassword(currentUser.id, newPassword);
             alert('Senha alterada com sucesso!');
             setIsChangePasswordOpen(false);
-            setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
         }
