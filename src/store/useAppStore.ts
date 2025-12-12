@@ -38,8 +38,11 @@ interface AppState {
     addPurchaseOrder: (po: PurchaseOrder) => void;
     updatePurchaseOrderStatus: (id: string, status: PurchaseStatus) => void;
     updatePurchaseOrder: (po: PurchaseOrder) => void;
+    removePurchaseOrder: (id: string) => void;
     updateProductionBatch: (batch: ProductionBatch) => void;
+    removeProductionBatch: (id: string) => void;
     updateSale: (sale: Sale) => void;
+    removeSale: (id: string) => void;
 
     // Financeiro
     transactions: FinancialTransaction[];
@@ -304,6 +307,69 @@ export const useAppStore = create<AppState>()(
 
                 return {
                     sales: state.sales.map(s => s.id === updatedSale.id ? updatedSale : s),
+                    inventory: newInventory
+                };
+            }),
+
+            removePurchaseOrder: (id) => set((state) => {
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Delete',
+                    'Purchase',
+                    `Deleted Purchase Order: ${id}`
+                );
+                return {
+                    purchaseOrders: state.purchaseOrders.filter(po => po.id !== id)
+                };
+            }),
+
+            removeProductionBatch: (id) => set((state) => {
+                const batch = state.productionBatches.find(b => b.id === id);
+                const newInventory = { ...state.inventory };
+
+                if (batch) {
+                    // Revert inventory addition (Subtract)
+                    batch.outputs.forEach(output => {
+                        newInventory.Factory[output.productType] -= Number(output.quantity);
+                    });
+                }
+
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Delete',
+                    'Stock',
+                    `Deleted Production Batch: ${id}`
+                );
+
+                return {
+                    productionBatches: state.productionBatches.filter(b => b.id !== id),
+                    inventory: newInventory
+                };
+            }),
+
+            removeSale: (id) => set((state) => {
+                const sale = state.sales.find(s => s.id === id);
+                const newInventory = { ...state.inventory };
+
+                if (sale) {
+                    // Revert inventory deduction (Add back)
+                    sale.items.forEach(item => {
+                        newInventory[sale.location][item.productType] += Number(item.quantity);
+                    });
+                }
+
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Delete',
+                    'Sale',
+                    `Deleted Sale: ${id}`
+                );
+
+                return {
+                    sales: state.sales.filter(s => s.id !== id),
                     inventory: newInventory
                 };
             }),

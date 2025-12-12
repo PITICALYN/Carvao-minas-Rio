@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType } from '../types';
-import { Plus, Scale, Edit } from 'lucide-react';
+import { Plus, Scale, Edit, Trash2 } from 'lucide-react';
 
 export const Production = () => {
-    const { suppliers, productionBatches, addProductionBatch, updateProductionBatch, currentUser } = useAppStore();
+    const { suppliers, productionBatches, addProductionBatch, updateProductionBatch, removeProductionBatch, currentUser } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentBatchId, setCurrentBatchId] = useState<string | null>(null);
 
@@ -183,13 +183,26 @@ export const Production = () => {
                                     </td>
                                     <td className="px-6 py-4">
                                         {currentUser?.role === 'Admin' && (
-                                            <button
-                                                onClick={() => handleEdit(batch)}
-                                                className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
-                                                title="Editar Produção"
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handleEdit(batch)}
+                                                    className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                    title="Editar Produção"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        if (confirm('Tem certeza que deseja excluir esta produção? O estoque será revertido.')) {
+                                                            removeProductionBatch(batch.id);
+                                                        }
+                                                    }}
+                                                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                    title="Excluir Produção"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         )}
                                     </td>
                                 </tr>

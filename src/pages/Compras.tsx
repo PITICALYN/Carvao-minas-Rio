@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Search, Calendar, Edit } from 'lucide-react';
+import { Plus, Search, Calendar, Edit, Trash2 } from 'lucide-react';
 import { type PurchaseOrder, type MaterialType } from '../types';
 
 export const Compras = () => {
-    const { purchaseOrders, addPurchaseOrder, updatePurchaseOrder, suppliers, currentUser } = useAppStore();
+    const { purchaseOrders, addPurchaseOrder, updatePurchaseOrder, removePurchaseOrder, suppliers, currentUser } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Form State
@@ -51,6 +51,18 @@ export const Compras = () => {
         });
 
         setCurrentItem({ materialType: 'Eucalyptus', quantity: 0, unitPrice: 0, total: 0 });
+    };
+
+    const removeItem = (index: number) => {
+        const updatedItems = [...(newOrder.items || [])];
+        updatedItems.splice(index, 1);
+        const orderTotal = updatedItems.reduce((acc, item) => acc + item.total, 0);
+
+        setNewOrder({
+            ...newOrder,
+            items: updatedItems,
+            totalAmount: orderTotal
+        });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -152,16 +164,29 @@ export const Compras = () => {
                         </div>
                         <div className="flex gap-2">
                             {currentUser?.role === 'Admin' && (
-                                <button
-                                    onClick={() => {
-                                        setNewOrder(order);
-                                        setIsModalOpen(true);
-                                    }}
-                                    className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
-                                    title="Editar Pedido"
-                                >
-                                    <Edit className="w-4 h-4" />
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setNewOrder(order);
+                                            setIsModalOpen(true);
+                                        }}
+                                        className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                        title="Editar Pedido"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (confirm('Tem certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.')) {
+                                                removePurchaseOrder(order.id);
+                                            }
+                                        }}
+                                        className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                        title="Excluir Pedido"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             )}
                             {order.status === 'Pending' && (
                                 <button
@@ -311,9 +336,9 @@ export const Compras = () => {
                                         <div>
                                             <label className="block text-xs text-slate-400 mb-1">Valor Total (R$)</label>
                                             <input
-                                                type="number"
+                                                type="text"
                                                 placeholder="R$ Total"
-                                                value={currentItem.total || ''}
+                                                value={currentItem.total ? currentItem.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
                                                 readOnly
                                                 className="w-full input-field px-2 py-1 text-sm bg-slate-900 text-slate-500 cursor-not-allowed"
                                             />
@@ -331,14 +356,24 @@ export const Compras = () => {
                                     {newOrder.items && newOrder.items.length > 0 && (
                                         <div className="mt-4 space-y-2">
                                             {newOrder.items.map((item, idx) => (
-                                                <div key={idx} className="flex justify-between items-center bg-slate-950 p-2 rounded text-sm">
+                                                <div key={idx} className="flex justify-between items-center bg-slate-950 p-2 rounded text-sm group">
                                                     <span className="text-slate-300">{item.quantity}x {item.materialType}</span>
-                                                    <span className="text-white">R$ {item.total.toFixed(2)}</span>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-white">R$ {item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeItem(idx)}
+                                                            className="text-slate-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                                                            title="Remover item"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                             <div className="flex justify-between items-center pt-2 border-t border-white/10 font-bold">
                                                 <span className="text-slate-400">Total do Pedido</span>
-                                                <span className="text-white">R$ {newOrder.totalAmount?.toFixed(2)}</span>
+                                                <span className="text-white">R$ {newOrder.totalAmount?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             </div>
                                         </div>
                                     )}

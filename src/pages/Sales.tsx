@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType, type Location, type Sale } from '../types';
-import { Plus, Printer, FileText, X, Edit } from 'lucide-react';
+import { Plus, Edit, Trash2, Printer, X } from 'lucide-react';
 
 export const Sales = () => {
-    const { sales, addSale, updateSale, currentUser } = useAppStore();
+    const { sales, addSale, updateSale, removeSale, currentUser } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
     const [currentSaleId, setCurrentSaleId] = useState<string | null>(null);
@@ -156,20 +156,33 @@ export const Sales = () => {
                                     <td className="px-6 py-4">
                                         <div className="flex gap-2">
                                             {currentUser?.role === 'Admin' && (
-                                                <button
-                                                    onClick={() => handleEdit(sale)}
-                                                    className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-400 transition-colors"
-                                                    title="Editar Venda"
-                                                >
-                                                    <Edit className="w-5 h-5" />
-                                                </button>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleEdit(sale)}
+                                                        className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                        title="Editar Venda"
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (confirm('Tem certeza que deseja excluir esta venda? O estoque será revertido.')) {
+                                                                removeSale(sale.id);
+                                                            }
+                                                        }}
+                                                        className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                        title="Excluir Venda"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             )}
                                             <button
                                                 onClick={() => setSelectedSale(sale)}
                                                 className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-400 transition-colors"
                                                 title="Gerar Romaneio"
                                             >
-                                                <FileText className="w-5 h-5" />
+                                                <Printer className="w-5 h-5" />
                                             </button>
                                         </div>
                                     </td>
