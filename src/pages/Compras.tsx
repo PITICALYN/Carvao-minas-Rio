@@ -20,21 +20,23 @@ export const Compras = () => {
     const [currentItem, setCurrentItem] = useState<{
         materialType: MaterialType;
         quantity: number;
-        unitPrice: number;
+        total: number;
     }>({
         materialType: 'Eucalyptus',
         quantity: 0,
-        unitPrice: 0
+        total: 0
     });
 
     const addItem = () => {
-        if (currentItem.quantity <= 0 || currentItem.unitPrice <= 0) return;
+        if (currentItem.quantity <= 0 || currentItem.total <= 0) return;
 
-        const total = currentItem.quantity * currentItem.unitPrice;
+        const unitPrice = currentItem.total / currentItem.quantity;
         const newItem = {
-            ...currentItem,
+            materialType: currentItem.materialType,
+            quantity: currentItem.quantity,
+            unitPrice: unitPrice,
             description: `${currentItem.materialType} - ${currentItem.quantity} units`,
-            total
+            total: currentItem.total
         };
 
         const updatedItems = [...(newOrder.items || []), newItem];
@@ -46,7 +48,7 @@ export const Compras = () => {
             totalAmount: orderTotal
         });
 
-        setCurrentItem({ materialType: 'Eucalyptus', quantity: 0, unitPrice: 0 });
+        setCurrentItem({ materialType: 'Eucalyptus', quantity: 0, total: 0 });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -222,7 +224,7 @@ export const Compras = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-slate-400 mb-1">Quantidade</label>
+                                        <label className="block text-xs text-slate-400 mb-1">Quantidade (Kg/Un)</label>
                                         <input
                                             type="number"
                                             placeholder="Qtd"
@@ -230,19 +232,24 @@ export const Compras = () => {
                                             onChange={e => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
                                             className="w-full input-field px-2 py-1 text-sm"
                                         />
+                                        {currentItem.quantity > 0 && (
+                                            <span className="text-xs text-slate-500 block mt-1">
+                                                {currentItem.quantity.toLocaleString('pt-BR')} {currentItem.materialType === 'Charcoal_Bulk' ? 'kg' : 'un'}
+                                            </span>
+                                        )}
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-slate-400 mb-1">Preço Unit.</label>
+                                        <label className="block text-xs text-slate-400 mb-1">Valor Total (R$)</label>
                                         <input
                                             type="number"
-                                            placeholder="R$"
-                                            value={currentItem.unitPrice || ''}
-                                            onChange={e => setCurrentItem({ ...currentItem, unitPrice: Number(e.target.value) })}
+                                            placeholder="R$ Total"
+                                            value={currentItem.total || ''}
+                                            onChange={e => setCurrentItem({ ...currentItem, total: Number(e.target.value) })}
                                             className="w-full input-field px-2 py-1 text-sm"
                                         />
-                                        {currentItem.unitPrice > 0 && (
+                                        {currentItem.quantity > 0 && currentItem.total > 0 && (
                                             <span className="text-xs text-emerald-400 block mt-1">
-                                                R$ {currentItem.unitPrice.toFixed(2)} / {currentItem.materialType === 'Charcoal_Bulk' ? 'kg' : 'un'}
+                                                Unit: R$ {(currentItem.total / currentItem.quantity).toFixed(2)}
                                             </span>
                                         )}
                                     </div>
