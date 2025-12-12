@@ -71,8 +71,26 @@ export interface User {
     username: string;
     password?: string; // Optional for current user object (security), required for storage
     role: UserRole;
+    permissions: string[]; // Granular permissions
     canPrint?: boolean;
 }
+
+export const PERMISSIONS = {
+    VIEW_DASHBOARD: 'view_dashboard',
+    VIEW_SALES: 'view_sales',
+    MANAGE_SALES: 'manage_sales', // Create, Edit, Delete
+    VIEW_PRODUCTION: 'view_production',
+    MANAGE_PRODUCTION: 'manage_production',
+    VIEW_INVENTORY: 'view_inventory',
+    MANAGE_INVENTORY: 'manage_inventory', // Transfers
+    VIEW_FINANCIAL: 'view_financial',
+    MANAGE_FINANCIAL: 'manage_financial',
+    VIEW_USERS: 'view_users',
+    MANAGE_USERS: 'manage_users',
+    VIEW_REPORTS: 'view_reports',
+    MANAGE_SETTINGS: 'manage_settings',
+    VIEW_AUDIT: 'view_audit'
+} as const;
 
 // --- Module: Comercial ---
 export interface Customer {
@@ -159,5 +177,17 @@ export interface AuditLog {
     userName: string;
     action: AuditAction;
     resource: AuditResource;
+    entityId?: string; // ID of the specific entity (Sale ID, Batch ID, etc.)
     details: string;
+}
+
+// --- Notifications ---
+export interface Notification {
+    id: string;
+    title: string;
+    message: string;
+    type: 'info' | 'warning' | 'error' | 'success';
+    timestamp: number;
+    read: boolean;
+    link?: string;
 }

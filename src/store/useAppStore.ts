@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { type Supplier, type ProductionBatch, type Sale, type InventoryState, type ProductType, type Location, type User, type Customer, type PurchaseOrder, type PurchaseStatus, type FinancialTransaction, type Driver, type Shipment, type PriceTable, type AuditLog, type AuditAction, type AuditResource } from '../types';
+import { type Supplier, type ProductionBatch, type Sale, type InventoryState, type ProductType, type Location, type User, type Customer, type PurchaseOrder, type PurchaseStatus, type FinancialTransaction, type Driver, type Shipment, type PriceTable, type AuditLog, type AuditAction, type AuditResource, type Notification } from '../types';
 
 interface AppState {
     suppliers: Supplier[];
@@ -56,10 +56,17 @@ interface AppState {
 
     // Audit Log
     auditLogs: AuditLog[];
-    logAction: (userId: string, userName: string, action: AuditAction, resource: AuditResource, details: string) => void;
+    logAction: (userId: string, userName: string, action: AuditAction, resource: AuditResource, details: string, entityId?: string) => void;
 
     // Backup & Restore
     restoreData: (data: Partial<AppState>) => void;
+
+    // Notifications
+    notifications: Notification[];
+    addNotification: (notification: Notification) => void;
+    markNotificationAsRead: (id: string) => void;
+    clearNotifications: () => void;
+    checkNotifications: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -74,7 +81,18 @@ export const useAppStore = create<AppState>()(
             },
             currentUser: null,
             users: [
-                { id: 'admin', name: 'Administrador', username: 'admin', password: '123', role: 'Admin' }
+                {
+                    id: 'admin',
+                    name: 'Administrador',
+                    username: 'admin',
+                    password: '123',
+                    role: 'Admin',
+                    permissions: [
+                        'view_dashboard', 'view_sales', 'manage_sales', 'view_production', 'manage_production',
+                        'view_inventory', 'manage_inventory', 'view_financial', 'manage_financial',
+                        'view_users', 'manage_users', 'view_reports', 'manage_settings', 'view_audit'
+                    ]
+                }
             ],
 
             // New State Init
@@ -86,7 +104,7 @@ export const useAppStore = create<AppState>()(
             shipments: [],
             auditLogs: [],
 
-            logAction: (userId, userName, action, resource, details) => set((state) => ({
+            logAction: (userId, userName, action, resource, details, entityId) => set((state) => ({
                 auditLogs: [{
                     id: crypto.randomUUID(),
                     timestamp: Date.now(),
@@ -94,7 +112,8 @@ export const useAppStore = create<AppState>()(
                     userName,
                     action,
                     resource,
-                    details
+                    details,
+                    entityId
                 }, ...state.auditLogs]
             })),
 
@@ -109,7 +128,7 @@ export const useAppStore = create<AppState>()(
                     set({ currentUser: safeUser });
 
                     // Log Login
-                    state.logAction(user.id, user.name, 'Login', 'User', 'User logged in');
+                    state.logAction(user.id, user.name, 'Login', 'User', 'User logged in', user.id);
                     return true;
                 }
                 return false;
@@ -178,7 +197,8 @@ export const useAppStore = create<AppState>()(
                     state.currentUser?.name || 'System',
                     'Create',
                     'Sale',
-                    `New Sale: R$ ${sale.totalAmount.toLocaleString()} to ${sale.customerName || 'Cash'}`
+                    `New Sale: R$ ${sale.totalAmount.toLocaleString()} to ${sale.customerName || 'Cash'}`,
+                    sale.id
                 );
 
                 return {
@@ -245,7 +265,8 @@ export const useAppStore = create<AppState>()(
                     state.currentUser?.name || 'System',
                     'Update',
                     'Purchase',
-                    `Updated Purchase Order: ${updatedPo.id}`
+                    `Updated Purchase Order: ${updatedPo.id}`,
+                    updatedPo.id
                 );
                 return {
                     purchaseOrders: state.purchaseOrders.map(po => po.id === updatedPo.id ? updatedPo : po)
@@ -273,7 +294,8 @@ export const useAppStore = create<AppState>()(
                     state.currentUser?.name || 'System',
                     'Update',
                     'Stock',
-                    `Updated Production Batch: ${updatedBatch.id}`
+                    `Updated Production Batch: ${updatedBatch.id}`,
+                    updatedBatch.id
                 );
 
                 return {
@@ -305,7 +327,8 @@ export const useAppStore = create<AppState>()(
                     state.currentUser?.name || 'System',
                     'Update',
                     'Sale',
-                    `Updated Sale: ${updatedSale.id}`
+                    `Updated Sale: ${updatedSale.id}`,
+                    updatedSale.id
                 );
 
                 return {
@@ -320,7 +343,8 @@ export const useAppStore = create<AppState>()(
                     state.currentUser?.name || 'System',
                     'Delete',
                     'Purchase',
-                    `Deleted Purchase Order: ${id}`
+                    `Deleted Purchase Order: ${id}`,
+                    id
                 );
                 return {
                     purchaseOrders: state.purchaseOrders.filter(po => po.id !== id)
@@ -343,7 +367,8 @@ export const useAppStore = create<AppState>()(
                     state.currentUser?.name || 'System',
                     'Delete',
                     'Stock',
-                    `Deleted Production Batch: ${id}`
+                    `Deleted Production Batch: ${id}`,
+                    id
                 );
 
                 return {
@@ -368,7 +393,8 @@ export const useAppStore = create<AppState>()(
                     state.currentUser?.name || 'System',
                     'Delete',
                     'Sale',
-                    `Deleted Sale: ${id}`
+                    `Deleted Sale: ${id}`,
+                    id
                 );
 
                 return {
@@ -394,6 +420,81 @@ export const useAppStore = create<AppState>()(
                     currentUser: state.currentUser
                 };
             }),
+
+            // Notifications
+            notifications: [],
+
+            addNotification: (notification) => set((state) => ({
+                notifications: [notification, ...state.notifications]
+            })),
+
+            markNotificationAsRead: (id) => set((state) => ({
+                notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n)
+            })),
+
+            clearNotifications: () => set({ notifications: [] }),
+
+            checkNotifications: () => {
+                const state = get();
+                const newNotifications: Notification[] = [];
+
+                // 1. Check Low Stock (Example threshold: 100 units)
+                const LOW_STOCK_THRESHOLD = 100;
+                Object.entries(state.inventory).forEach(([location, products]) => {
+                    Object.entries(products).forEach(([product, qty]) => {
+                        if (qty < LOW_STOCK_THRESHOLD) {
+                            newNotifications.push({
+                                id: crypto.randomUUID(),
+                                title: 'Estoque Baixo',
+                                message: `O produto ${product} em ${location} está com apenas ${qty} unidades.`,
+                                type: 'warning',
+                                timestamp: Date.now(),
+                                read: false,
+                                link: '/estoque'
+                            });
+                        }
+                    });
+                });
+
+                // 2. Check Overdue Bills (Accounts Payable)
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                state.transactions.forEach(t => {
+                    if (t.type === 'Expense' && t.status === 'Pending') {
+                        const dueDate = new Date(t.date); // Assuming date is due date for simplicity or add dueDate field
+                        if (dueDate < today) {
+                            newNotifications.push({
+                                id: crypto.randomUUID(),
+                                title: 'Conta Atrasada',
+                                message: `A conta "${t.description}" de R$ ${t.amount} venceu em ${dueDate.toLocaleDateString()}.`,
+                                type: 'error',
+                                timestamp: Date.now(),
+                                read: false,
+                                link: '/financeiro'
+                            });
+                        } else if (dueDate.getTime() === today.getTime()) {
+                            newNotifications.push({
+                                id: crypto.randomUUID(),
+                                title: 'Conta Vence Hoje',
+                                message: `A conta "${t.description}" de R$ ${t.amount} vence hoje!`,
+                                type: 'warning',
+                                timestamp: Date.now(),
+                                read: false,
+                                link: '/financeiro'
+                            });
+                        }
+                    }
+                });
+
+                // Avoid duplicates (simple check by message content for this MVP)
+                const existingMessages = new Set(state.notifications.map(n => n.message));
+                const uniqueNewNotifications = newNotifications.filter(n => !existingMessages.has(n.message));
+
+                if (uniqueNewNotifications.length > 0) {
+                    set({ notifications: [...uniqueNewNotifications, ...state.notifications] });
+                }
+            },
 
         }),
         {

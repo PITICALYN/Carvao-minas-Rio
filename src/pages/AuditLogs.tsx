@@ -1,7 +1,8 @@
 import { useAppStore } from '../store/useAppStore';
-import { Shield, Search, Filter } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { useState } from 'react';
 import { type AuditAction } from '../types';
+import { Timeline } from '../components/Timeline';
 
 export const AuditLogs = () => {
     const { auditLogs, currentUser } = useAppStore();
@@ -24,16 +25,6 @@ export const AuditLogs = () => {
         const matchesAction = filterAction === 'All' || log.action === filterAction;
         return matchesSearch && matchesAction;
     });
-
-    const getActionColor = (action: AuditAction) => {
-        switch (action) {
-            case 'Login': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-            case 'Create': return 'text-green-400 bg-green-500/10 border-green-500/20';
-            case 'Update': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-            case 'Delete': return 'text-red-400 bg-red-500/10 border-red-500/20';
-            default: return 'text-slate-400 bg-slate-500/10 border-slate-500/20';
-        }
-    };
 
     return (
         <div className="space-y-6">
@@ -75,33 +66,9 @@ export const AuditLogs = () => {
 
             {/* Logs List */}
             <div className="space-y-2">
-                {filteredLogs.map((log) => (
-                    <div key={log.id} className="glass-panel p-4 rounded-lg flex items-center justify-between hover:bg-white/5 transition-colors">
-                        <div className="flex items-center gap-4">
-                            <div className={`p-2 rounded-lg border ${getActionColor(log.action)}`}>
-                                <Shield className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-bold text-white">{log.userName}</span>
-                                    <span className="text-xs text-slate-500">•</span>
-                                    <span className="text-sm text-slate-300">{log.details}</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-xs text-slate-500">
-                                    <span>{new Date(log.timestamp).toLocaleString()}</span>
-                                    <span className="px-2 py-0.5 rounded bg-slate-800 border border-white/5 text-slate-400">
-                                        {log.resource}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className={`text-xs font-medium px-2 py-1 rounded border ${getActionColor(log.action)}`}>
-                            {log.action}
-                        </div>
-                    </div>
-                ))}
-
-                {filteredLogs.length === 0 && (
+                {filteredLogs.length > 0 ? (
+                    <Timeline logs={filteredLogs} />
+                ) : (
                     <div className="text-center py-12 text-slate-500">
                         Nenhum registro encontrado.
                     </div>

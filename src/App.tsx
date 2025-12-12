@@ -13,6 +13,7 @@ import { Expedicao } from './pages/Expedicao';
 import { Login } from './pages/Login';
 import { Users } from './pages/Users';
 import { Settings } from './pages/Settings';
+import { DRE } from './pages/DRE';
 import { AuditLogs } from './pages/AuditLogs';
 import { useAppStore } from './store/useAppStore';
 
@@ -36,6 +37,7 @@ function App() {
           <Route path="expedicao" element={<Expedicao />} />
           <Route path="financeiro" element={<Financeiro />} />
           <Route path="controladoria" element={<Reports />} />
+          <Route path="dre" element={<DRE />} />
           <Route path="usuarios" element={<Users />} />
           <Route path="configuracoes" element={<Settings />} />
           <Route path="auditoria" element={<AuditLogs />} />

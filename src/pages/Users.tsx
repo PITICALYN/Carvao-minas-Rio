@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { type UserRole } from '../types';
+import { type UserRole, PERMISSIONS } from '../types';
 import { Plus, Trash2, Shield, User as UserIcon, RefreshCw } from 'lucide-react';
 
 export const Users = () => {
@@ -13,6 +13,7 @@ export const Users = () => {
     const [password, setPassword] = useState('');
     const [role, setRole] = useState<UserRole>('Factory');
     const [canPrint, setCanPrint] = useState(false);
+    const [permissions, setPermissions] = useState<string[]>([]);
 
     if (currentUser?.role !== 'Admin') {
         return (
@@ -31,7 +32,8 @@ export const Users = () => {
             username,
             password,
             role,
-            canPrint
+            canPrint,
+            permissions
         });
         setIsModalOpen(false);
         // Reset form
@@ -40,6 +42,7 @@ export const Users = () => {
         setPassword('');
         setRole('Factory');
         setCanPrint(false);
+        setPermissions([]);
     };
 
     return (
@@ -181,6 +184,32 @@ export const Users = () => {
                                 <label htmlFor="canPrint" className="text-sm font-medium text-slate-400 select-none cursor-pointer">
                                     Permitir Impressão
                                 </label>
+                            </div>
+
+                            <div className="pt-4 border-t border-white/10">
+                                <label className="block text-sm font-medium text-slate-400 mb-3">Permissões de Acesso</label>
+                                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar p-1">
+                                    {Object.entries(PERMISSIONS).map(([key, value]) => (
+                                        <div key={key} className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                id={`perm-${value}`}
+                                                checked={permissions.includes(value)}
+                                                onChange={e => {
+                                                    if (e.target.checked) {
+                                                        setPermissions([...permissions, value]);
+                                                    } else {
+                                                        setPermissions(permissions.filter(p => p !== value));
+                                                    }
+                                                }}
+                                                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900"
+                                            />
+                                            <label htmlFor={`perm-${value}`} className="text-xs text-slate-300 select-none cursor-pointer">
+                                                {key.replace('VIEW_', 'Ver ').replace('MANAGE_', 'Gerenciar ').replace('_', ' ')}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="flex gap-3 mt-6 pt-4 border-t border-white/10">

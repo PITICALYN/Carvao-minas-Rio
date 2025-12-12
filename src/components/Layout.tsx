@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Truck, Factory, Package, ShoppingCart, LogOut, User, Users, ShoppingBag, DollarSign, PieChart, Shield, Lock, Settings } from 'lucide-react';
+import { LayoutDashboard, Truck, Factory, Package, ShoppingCart, LogOut, User, Users, ShoppingBag, DollarSign, PieChart, Shield, Lock, Settings, Bell, X, Check, FileText } from 'lucide-react';
 import clsx from 'clsx';
 import { useAppStore } from '../store/useAppStore';
 
@@ -48,6 +48,27 @@ export const Layout = () => {
         }
     };
 
+    // Notifications Logic
+    const { notifications, checkNotifications, markNotificationAsRead, clearNotifications } = useAppStore();
+    const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    React.useEffect(() => {
+        checkNotifications();
+        // Optional: Interval to check periodically
+        const interval = setInterval(checkNotifications, 60000); // Check every minute
+        return () => clearInterval(interval);
+    }, [checkNotifications]);
+
+    const getNotificationColor = (type: string) => {
+        switch (type) {
+            case 'warning': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+            case 'error': return 'text-red-400 bg-red-500/10 border-red-500/20';
+            case 'success': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+            default: return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+        }
+    };
+
     return (
         <div className="flex h-screen overflow-hidden">
             {/* Sidebar */}
@@ -58,48 +79,59 @@ export const Layout = () => {
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-                    <NavItem to="/" icon={LayoutDashboard} label="Dashboard" />
+                    {currentUser?.permissions?.includes('view_dashboard') && (
+                        <NavItem to="/" icon={LayoutDashboard} label="Dashboard" />
+                    )}
 
-                    {/* Commercial & Sales - Admin & Itaguai */}
-                    {(currentUser?.role === 'Admin' || currentUser?.role === 'Itaguai') && (
+                    {/* Commercial & Sales */}
+                    {(currentUser?.permissions?.includes('view_sales') || currentUser?.permissions?.includes('manage_sales')) && (
                         <>
                             <NavItem to="/comercial" icon={Users} label="Comercial" />
                             <NavItem to="/vendas" icon={ShoppingCart} label="Vendas" />
                         </>
                     )}
 
-                    {/* Purchasing - Admin Only (for now) */}
-                    {currentUser?.role === 'Admin' && (
+                    {/* Purchasing */}
+                    {currentUser?.permissions?.includes('manage_inventory') && ( // Assuming purchasing falls under inventory/admin for now or add specific perm
                         <>
                             <NavItem to="/compras" icon={ShoppingBag} label="Compras" />
                             <NavItem to="/suppliers" icon={User} label="Fornecedores" />
                         </>
                     )}
 
-                    {/* Inventory & Shipping - Everyone (Filtered by location in page) */}
-                    <NavItem to="/estoque" icon={Package} label="Estoque" />
-                    <NavItem to="/expedicao" icon={Truck} label="Expedição" />
+                    {/* Inventory & Shipping */}
+                    {currentUser?.permissions?.includes('view_inventory') && (
+                        <>
+                            <NavItem to="/estoque" icon={Package} label="Estoque" />
+                            <NavItem to="/expedicao" icon={Truck} label="Expedição" />
+                        </>
+                    )}
 
-                    {/* Production - Admin & Factory */}
-                    {(currentUser?.role === 'Admin' || currentUser?.role === 'Factory') && (
+                    {/* Production */}
+                    {currentUser?.permissions?.includes('view_production') && (
                         <NavItem to="/production" icon={Factory} label="Produção" />
                     )}
 
-                    {/* Financial & Controllership - Admin Only */}
-                    {currentUser?.role === 'Admin' && (
+                    {/* Financial */}
+                    {currentUser?.permissions?.includes('view_financial') && (
                         <>
                             <NavItem to="/financeiro" icon={DollarSign} label="Financeiro" />
+                            <NavItem to="/dre" icon={FileText} label="DRE Gerencial" />
                             <NavItem to="/controladoria" icon={PieChart} label="Controladoria" />
                         </>
                     )}
 
-                    {currentUser?.role === 'Admin' && (
-                        <div className="pt-4 mt-4 border-t border-white/10">
+                    <div className="pt-4 mt-4 border-t border-white/10">
+                        {currentUser?.permissions?.includes('view_users') && (
                             <NavItem to="/usuarios" icon={User} label="Usuários" />
+                        )}
+                        {currentUser?.permissions?.includes('view_audit') && (
                             <NavItem to="/auditoria" icon={Shield} label="Auditoria" />
+                        )}
+                        {currentUser?.permissions?.includes('manage_settings') && (
                             <NavItem to="/configuracoes" icon={Settings} label="Configurações" />
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </nav>
 
                 <div className="p-4 border-t border-white/10">
@@ -112,6 +144,83 @@ export const Layout = () => {
                             <p className="text-xs text-slate-400">{currentUser?.role === 'Admin' ? 'Administrador' : currentUser?.role === 'Factory' ? 'Fábrica' : 'Itaguaí'}</p>
                         </div>
                     </div>
+                    <button
+                        onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                        className="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-300 group mb-2 text-sm relative"
+                    >
+                        <div className="relative">
+                            <Bell className="w-4 h-4" />
+                            {unreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                            )}
+                        </div>
+                        <div className="flex-1 text-left flex justify-between items-center">
+                            <span>Notificações</span>
+                            {unreadCount > 0 && (
+                                <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </div>
+                    </button>
+
+                    {/* Notification Dropdown (Sidebar Popover style) */}
+                    {isNotificationsOpen && (
+                        <div className="absolute left-64 top-4 bottom-4 w-80 glass-panel border border-white/10 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden ml-2">
+                            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-slate-900/50">
+                                <h3 className="font-bold text-white">Notificações</h3>
+                                <div className="flex gap-2">
+                                    {notifications.length > 0 && (
+                                        <button
+                                            onClick={clearNotifications}
+                                            className="text-xs text-slate-400 hover:text-white transition-colors"
+                                        >
+                                            Limpar
+                                        </button>
+                                    )}
+                                    <button onClick={() => setIsNotificationsOpen(false)}>
+                                        <X className="w-4 h-4 text-slate-400 hover:text-white" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+                                {notifications.length === 0 ? (
+                                    <div className="text-center py-8 text-slate-500 text-sm">
+                                        Nenhuma notificação nova.
+                                    </div>
+                                ) : (
+                                    notifications.map(notification => (
+                                        <div
+                                            key={notification.id}
+                                            className={`p-3 rounded-lg border transition-colors relative group ${notification.read ? 'bg-slate-900/30 border-white/5 opacity-60' : 'bg-slate-800/50 border-white/10'}`}
+                                        >
+                                            <div className="flex justify-between items-start mb-1">
+                                                <span className={`text-xs font-bold px-1.5 py-0.5 rounded border ${getNotificationColor(notification.type)}`}>
+                                                    {notification.title}
+                                                </span>
+                                                <span className="text-[10px] text-slate-500">
+                                                    {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-slate-300 mb-2">{notification.message}</p>
+
+                                            {!notification.read && (
+                                                <button
+                                                    onClick={() => markNotificationAsRead(notification.id)}
+                                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-all"
+                                                    title="Marcar como lida"
+                                                >
+                                                    <Check className="w-3 h-3 text-emerald-400" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     <button
                         onClick={() => setIsChangePasswordOpen(true)}
                         className="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-300 group mb-2 text-sm"
