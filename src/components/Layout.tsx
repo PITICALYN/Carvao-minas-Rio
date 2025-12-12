@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Truck, Factory, Package, ShoppingCart, LogOut, User, Users, ShoppingBag, DollarSign, PieChart, Shield } from 'lucide-react';
+import { LayoutDashboard, Truck, Factory, Package, ShoppingCart, LogOut, User, Users, ShoppingBag, DollarSign, PieChart, Shield, Lock } from 'lucide-react';
 import clsx from 'clsx';
 import { useAppStore } from '../store/useAppStore';
 
@@ -25,8 +25,30 @@ const NavItem = ({ to, icon: Icon, label }: { to: string; icon: React.ElementTyp
 };
 
 export const Layout = () => {
-
     const { currentUser, logout } = useAppStore();
+
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = React.useState(false);
+    const [currentPassword, setCurrentPassword] = React.useState('');
+    const [newPassword, setNewPassword] = React.useState('');
+    const [confirmPassword, setConfirmPassword] = React.useState('');
+
+    const handleChangePassword = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newPassword !== confirmPassword) {
+            alert('As senhas não coincidem!');
+            return;
+        }
+
+        // In a real app, we would verify currentPassword here
+        if (currentUser) {
+            useAppStore.getState().updateUserPassword(currentUser.id, newPassword);
+            alert('Senha alterada com sucesso!');
+            setIsChangePasswordOpen(false);
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        }
+    };
 
     return (
         <div className="flex h-screen overflow-hidden">
@@ -89,6 +111,13 @@ export const Layout = () => {
                         </div>
                     </div>
                     <button
+                        onClick={() => setIsChangePasswordOpen(true)}
+                        className="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-300 group mb-2 text-sm"
+                    >
+                        <Lock className="w-4 h-4" />
+                        <span>Alterar Senha</span>
+                    </button>
+                    <button
                         onClick={logout}
                         className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-300 group"
                     >
@@ -104,6 +133,54 @@ export const Layout = () => {
                     <Outlet />
                 </div>
             </main>
+
+            {/* Change Password Modal */}
+            {isChangePasswordOpen && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+                        <h2 className="text-xl font-bold text-white mb-6">Alterar Senha</h2>
+                        <form onSubmit={handleChangePassword} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-1">Nova Senha</label>
+                                <input
+                                    required
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={e => setNewPassword(e.target.value)}
+                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
+                                    placeholder="******"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-1">Confirmar Nova Senha</label>
+                                <input
+                                    required
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)}
+                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
+                                    placeholder="******"
+                                />
+                            </div>
+                            <div className="flex gap-3 mt-6 pt-4 border-t border-white/10">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsChangePasswordOpen(false)}
+                                    className="flex-1 px-4 py-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+                                >
+                                    Salvar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

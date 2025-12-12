@@ -23,6 +23,7 @@ interface AppState {
     logout: () => void;
     addUser: (user: User) => void;
     removeUser: (id: string) => void;
+    updateUserPassword: (id: string, newPassword: string) => void;
 
     // --- New Modules ---
 
@@ -111,6 +112,10 @@ export const useAppStore = create<AppState>()(
 
             removeUser: (id) => set((state) => ({
                 users: state.users.filter(u => u.id !== id)
+            })),
+
+            updateUserPassword: (id, newPassword) => set((state) => ({
+                users: state.users.map(u => u.id === id ? { ...u, password: newPassword } : u)
             })),
 
             logout: () => set({ currentUser: null }),

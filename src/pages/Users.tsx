@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type UserRole } from '../types';
-import { Plus, Trash2, Shield, User as UserIcon } from 'lucide-react';
+import { Plus, Trash2, Shield, User as UserIcon, RefreshCw } from 'lucide-react';
 
 export const Users = () => {
     const { users, addUser, removeUser, currentUser } = useAppStore();
@@ -88,13 +88,27 @@ export const Users = () => {
                         </div>
 
                         {user.username !== 'admin' && (
-                            <button
-                                onClick={() => removeUser(user.id)}
-                                className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                title="Remover usuário"
-                            >
-                                <Trash2 className="w-5 h-5" />
-                            </button>
+                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={() => {
+                                        if (confirm(`Resetar senha de ${user.name} para '123'?`)) {
+                                            useAppStore.getState().updateUserPassword(user.id, '123');
+                                            alert('Senha resetada com sucesso!');
+                                        }
+                                    }}
+                                    className="p-2 text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
+                                    title="Resetar Senha para '123'"
+                                >
+                                    <RefreshCw className="w-5 h-5" />
+                                </button>
+                                <button
+                                    onClick={() => removeUser(user.id)}
+                                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                    title="Remover usuário"
+                                >
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
+                            </div>
                         )}
                     </div>
                 ))}
