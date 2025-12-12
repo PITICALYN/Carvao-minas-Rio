@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Truck, Factory, Package, ShoppingCart, LogOut, User, Users, ShoppingBag, DollarSign, PieChart, Shield, Lock } from 'lucide-react';
+import { LayoutDashboard, Truck, Factory, Package, ShoppingCart, LogOut, User, Users, ShoppingBag, DollarSign, PieChart, Shield, Lock, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import { useAppStore } from '../store/useAppStore';
 
@@ -97,6 +97,7 @@ export const Layout = () => {
                         <div className="pt-4 mt-4 border-t border-white/10">
                             <NavItem to="/usuarios" icon={User} label="Usuários" />
                             <NavItem to="/auditoria" icon={Shield} label="Auditoria" />
+                            <NavItem to="/configuracoes" icon={Settings} label="Configurações" />
                         </div>
                     )}
                 </nav>

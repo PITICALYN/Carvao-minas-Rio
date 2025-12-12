@@ -57,6 +57,9 @@ interface AppState {
     // Audit Log
     auditLogs: AuditLog[];
     logAction: (userId: string, userName: string, action: AuditAction, resource: AuditResource, details: string) => void;
+
+    // Backup & Restore
+    restoreData: (data: Partial<AppState>) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -374,6 +377,23 @@ export const useAppStore = create<AppState>()(
                 };
             }),
 
+            restoreData: (data) => set((state) => {
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'User',
+                    'System Restore Performed'
+                );
+                return {
+                    ...state,
+                    ...data,
+                    // Ensure we don't overwrite actions or current session if not intended, 
+                    // but usually restore replaces everything data-wise.
+                    // We should probably keep the current user session active though.
+                    currentUser: state.currentUser
+                };
+            }),
 
         }),
         {
