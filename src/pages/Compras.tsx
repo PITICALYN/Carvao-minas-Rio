@@ -139,8 +139,22 @@ export const Compras = () => {
                         </div>
 
                         <div className="pt-4 border-t border-white/5 flex justify-between items-center">
-                            <span className="text-slate-400 text-sm">Total</span>
-                            <span className="text-xl font-bold text-white">R$ {order.totalAmount.toLocaleString()}</span>
+                            <div className="flex items-center gap-3">
+                                <span className="text-slate-400 text-sm">Total</span>
+                                <span className="text-xl font-bold text-white">R$ {order.totalAmount.toLocaleString()}</span>
+                            </div>
+                            {order.status === 'Pending' && (
+                                <button
+                                    onClick={() => {
+                                        if (confirm('Marcar este pedido como Recebido?')) {
+                                            useAppStore.getState().updatePurchaseOrderStatus(order.id, 'Received');
+                                        }
+                                    }}
+                                    className="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-500/20 transition-colors"
+                                >
+                                    Marcar como Recebido
+                                </button>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -181,6 +195,17 @@ export const Compras = () => {
                                         onChange={e => setNewOrder({ ...newOrder, date: e.target.value })}
                                         className="w-full input-field px-4 py-2"
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-1">Status</label>
+                                    <select
+                                        value={newOrder.status}
+                                        onChange={e => setNewOrder({ ...newOrder, status: e.target.value as any })}
+                                        className="w-full input-field px-4 py-2"
+                                    >
+                                        <option value="Pending">Pendente</option>
+                                        <option value="Received">Recebido</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-300 mb-1">Nº Manifesto</label>
