@@ -10,7 +10,7 @@ export const Login = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (login(username, password)) {
+        if (login(username.trim(), password.trim())) {
             setError('');
         } else {
             setError('Usuário ou senha incorretos');
@@ -52,6 +52,8 @@ export const Login = () => {
                                     onChange={(e) => setUsername(e.target.value)}
                                     className="w-full bg-slate-950/50 border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
                                     placeholder="Digite seu usuário"
+                                    autoCapitalize="none"
+                                    autoCorrect="off"
                                 />
                             </div>
                         </div>
