@@ -199,50 +199,51 @@ export const DRE = () => {
                         </div>
 
                         {/* 4. CMV */}
-                        <div className="flex justify-between items-center mb-1">
-                            <span className="text-slate-300">(-) Custo da Mercadoria Vendida (CMV)</span>
-                            <span className="text-red-400">{formatCurrency(financialData.cmv)}</span>
+                        <div className="p-4 hover:bg-white/5 transition-colors bg-red-500/5">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-slate-300">(-) Custo da Mercadoria Vendida (CMV)</span>
+                                <span className="text-red-400">{formatCurrency(financialData.cmv)}</span>
+                            </div>
+                            <div className="text-xs text-slate-500">
+                                Estimado em {useAppStore.getState().dreSettings?.cmvRate ?? 40}% sobre a receita bruta (Matéria-prima, Embalagem)
+                            </div>
                         </div>
-                        <div className="text-xs text-slate-500">
-                            Estimado em {useAppStore.getState().dreSettings?.cmvRate ?? 40}% sobre a receita bruta (Matéria-prima, Embalagem)
-                        </div>
-                    </div>
 
-                    {/* 5. Lucro Bruto */}
-                    <div className="p-4 bg-slate-800/50 font-bold border-y border-white/10">
-                        <div className="flex justify-between items-center">
-                            <span className="text-white">(=) Lucro Bruto</span>
-                            <span className="text-white">{formatCurrency(financialData.grossProfit)}</span>
+                        {/* 5. Lucro Bruto */}
+                        <div className="p-4 bg-slate-800/50 font-bold border-y border-white/10">
+                            <div className="flex justify-between items-center">
+                                <span className="text-white">(=) Lucro Bruto</span>
+                                <span className="text-white">{formatCurrency(financialData.grossProfit)}</span>
+                            </div>
+                            <div className="text-right text-xs text-slate-400 mt-1">
+                                Margem Bruta: {getPercentage(financialData.grossProfit, financialData.netRevenue)}
+                            </div>
                         </div>
-                        <div className="text-right text-xs text-slate-400 mt-1">
-                            Margem Bruta: {getPercentage(financialData.grossProfit, financialData.netRevenue)}
-                        </div>
-                    </div>
 
-                    {/* 6. Despesas Operacionais */}
-                    <div className="p-4 hover:bg-white/5 transition-colors bg-red-500/5">
-                        <div className="flex justify-between items-center mb-1">
-                            <span className="text-slate-300">(-) Despesas Operacionais</span>
-                            <span className="text-red-400">{formatCurrency(financialData.operatingExpenses)}</span>
+                        {/* 6. Despesas Operacionais */}
+                        <div className="p-4 hover:bg-white/5 transition-colors bg-red-500/5">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-slate-300">(-) Despesas Operacionais</span>
+                                <span className="text-red-400">{formatCurrency(financialData.operatingExpenses)}</span>
+                            </div>
+                            <div className="text-xs text-slate-500">Contas pagas, salários, manutenção, etc.</div>
                         </div>
-                        <div className="text-xs text-slate-500">Contas pagas, salários, manutenção, etc.</div>
-                    </div>
 
-                    {/* 7. Lucro Líquido */}
-                    <div className="p-6 bg-emerald-900/20 font-bold text-lg border-t border-white/10">
-                        <div className="flex justify-between items-center">
-                            <span className="text-emerald-400">(=) Resultado Líquido do Exercício</span>
-                            <span className={financialData.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                                {formatCurrency(financialData.netProfit)}
-                            </span>
-                        </div>
-                        <div className="text-right text-sm text-slate-400 mt-1 font-normal">
-                            Margem Líquida: {getPercentage(financialData.netProfit, financialData.netRevenue)}
+                        {/* 7. Lucro Líquido */}
+                        <div className="p-6 bg-emerald-900/20 font-bold text-lg border-t border-white/10">
+                            <div className="flex justify-between items-center">
+                                <span className="text-emerald-400">(=) Resultado Líquido do Exercício</span>
+                                <span className={financialData.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                                    {formatCurrency(financialData.netProfit)}
+                                </span>
+                            </div>
+                            <div className="text-right text-sm text-slate-400 mt-1 font-normal">
+                                Margem Líquida: {getPercentage(financialData.netProfit, financialData.netRevenue)}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        </div >
     );
 };
