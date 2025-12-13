@@ -329,9 +329,82 @@ export const Production = () => {
                                         <Scale className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                                     </div>
                                     {supplierId && (
-                                        <p className={`text-xs mt-1 ${parseFloat(inputWeight) > maxStock ? 'text-red-400 font-bold' : 'text-slate-500'}`}>
-                                            Disponível: {maxStock.toFixed(2)} kg
-                                        </p>
+                                        <div className="mt-2">
+                                            <p className={`text-xs ${parseFloat(inputWeight) > maxStock ? 'text-red-400 font-bold' : 'text-slate-500'}`}>
+                                                Disponível: {maxStock.toFixed(2)} kg
+                                            </p>
+
+                                            {/* Optimization Suggestion */}
+                                            {parseFloat(inputWeight) > 0 && (
+                                                <div className="mt-3 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <p className="text-xs font-bold text-blue-400 mb-1">💡 Sugestão de Melhor Aproveitamento</p>
+                                                            <p className="text-xs text-slate-300">
+                                                                {(() => {
+                                                                    const total = parseFloat(inputWeight);
+                                                                    // Simple solver to minimize remainder
+                                                                    // Weights: 16 (Paulistao), 5, 3
+                                                                    let best = { p: 0, f: 0, t: 0, remainder: total };
+
+                                                                    // Try to maximize large bags first (heuristic)
+                                                                    const maxP = Math.floor(total / PAULISTAO_WEIGHT);
+
+                                                                    for (let p = maxP; p >= 0; p--) {
+                                                                        const remP = total - (p * PAULISTAO_WEIGHT);
+                                                                        const maxF = Math.floor(remP / 5);
+
+                                                                        for (let f = maxF; f >= 0; f--) {
+                                                                            const remF = remP - (f * 5);
+                                                                            const t = Math.floor(remF / 3);
+                                                                            const remainder = remF - (t * 3);
+
+                                                                            if (remainder < best.remainder) {
+                                                                                best = { p, f, t, remainder };
+                                                                            }
+                                                                            if (remainder === 0) break;
+                                                                        }
+                                                                        if (best.remainder === 0) break;
+                                                                    }
+
+                                                                    return (
+                                                                        <>
+                                                                            <span>
+                                                                                {best.p > 0 && `${best.p}x Paulistão, `}
+                                                                                {best.f > 0 && `${best.f}x 5kg, `}
+                                                                                {best.t > 0 && `${best.t}x 3kg`}
+                                                                                {best.p === 0 && best.f === 0 && best.t === 0 && "Nenhuma combinação eficiente."}
+                                                                            </span>
+                                                                            {best.remainder === 0 ? (
+                                                                                <span className="text-emerald-400 ml-1">(0% desperdício)</span>
+                                                                            ) : (
+                                                                                <span className="text-amber-400 ml-1">(Sobra: {best.remainder.toFixed(1)}kg)</span>
+                                                                            )}
+
+                                                                            {(best.p > 0 || best.f > 0 || best.t > 0) && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        const newOutputs = [...outputs];
+                                                                                        newOutputs.find(o => o.type === 'Paulistao')!.qty = best.p.toString();
+                                                                                        newOutputs.find(o => o.type === '5kg')!.qty = best.f.toString();
+                                                                                        newOutputs.find(o => o.type === '3kg')!.qty = best.t.toString();
+                                                                                        setOutputs(newOutputs);
+                                                                                    }}
+                                                                                    className="block mt-2 text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded transition-colors"
+                                                                                >
+                                                                                    Aplicar Sugestão
+                                                                                </button>
+                                                                            )}
+                                                                        </>
+                                                                    );
+                                                                })()}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             </div>
