@@ -1,0 +1,151 @@
+# Charcoal Business Management App - Task List
+
+- [x] **Project Setup**
+    - [x] Initialize Vite + React + TypeScript project in `charcoal-management-app` <!-- id: 0 -->
+    - [x] Install dependencies (Tailwind CSS, React Router, Zustand, Lucide, Recharts) <!-- id: 1 -->
+    - [x] Configure Tailwind CSS <!-- id: 2 -->
+    - [x] Create project structure (components, pages, store, types) <!-- id: 3 -->
+
+- [/] **Core Features Implementation**
+    - [/] **Data Store (Zustand)**
+        - [x] Define types (Supplier, Product, Transaction, Inventory) <!-- id: 4 -->
+        - [x] Create store for managing state <!-- id: 5 -->
+    - [x] **Suppliers & Production**
+        - [x] Create Supplier management page <!-- id: 6 -->
+        - [x] Create Production Entry form (Input kg -> Output bags) <!-- id: 7 -->
+        - [x] Implement Loss/Efficiency calculation logic <!-- id: 8 -->
+    - [x] **Inventory Management**
+        - [x] Create Inventory Dashboard (Factory vs Itaguaí) <!-- id: 9 -->
+        - [x] Implement stock transfer logic (Factory -> Itaguaí) <!-- id: 10 -->
+    - [x] **Sales**
+        - [x] Create Sales Entry form (Factory & Itaguaí) <!-- id: 11 -->
+        - [x] Support different product types (Bulk, 3kg, 5kg, Paulistão) <!-- id: 12 -->
+    - [x] **Dashboard & Reports**
+        - [x] Create Main Dashboard with key metrics <!-- id: 13 -->
+        - [x] Implement "Best Supplier" analysis chart <!-- id: 14 -->
+        - [x] Implement Financial Report (Revenue/Profit) <!-- id: 15 -->
+
+- [x] **UI/UX Polish**
+    - [x] Apply premium design (Glassmorphism, modern color palette) <!-- id: 16 -->
+    - [x] Ensure responsiveness <!-- id: 17 -->
+
+- [ ] **System Expansion (7 Modules)**
+    - [ ] **Architecture & Types**
+        - [x] Define new types (Customer, PurchaseOrder, Invoice, Transaction) <!-- id: 30 -->
+        - [x] Refactor Store for modularity <!-- id: 31 -->
+        - [x] Update Navigation/Sidebar <!-- id: 32 -->
+    - [ ] **Module 1: Comercial (Commercial)**
+        - [x] Create Customer Management (CRM) <!-- id: 33 -->
+        - [x] Implement Price Tables <!-- id: 34 -->
+    - [ ] **Module 2: Compras (Purchasing)**
+        - [x] Implement Purchase Orders <!-- id: 35 -->
+        - [ ] Track Raw Material Inbound <!-- id: 36 -->
+    - [ ] **Module 3: Financeiro (Financial)**
+        - [x] Implement Accounts Payable/Receivable <!-- id: 37 -->
+        - [x] Create Cash Flow View <!-- id: 38 -->
+    - [ ] **Module 4: Expedição (Logistics)**
+        - [x] Implement Load Planning/Shipping <!-- id: 39 -->
+    - [ ] **Module 5: Controladoria (Controllership)**
+        - [x] Create Cost Analysis Reports <!-- id: 40 -->
+    - [ ] **Enhancements**
+        - [ ] Update Inventory to support Raw Materials <!-- id: 41 -->
+        - [ ] Integrate Sales with new Finance/Commercial modules <!-- id: 42 -->
+        - [x] Add custom logo <!-- id: 43 -->
+        - [x] Add Manifesto and Origin Authorization to Purchase Order <!-- id: 44 -->
+        - [x] Rebrand UI with Logo Colors (Green/Gold) <!-- id: 45 -->
+
+- [x] Verify Print Permissions (Admin vs Factory)
+- [x] Verify Credit Limit Lock (Try to exceed limit)
+- [x] Verify Cost Analysis Calculation in Reports
+- [x] Verify Audit Log recording
+- [x] Verify Paulistão Weight (20kg) in Production) <!-- id: 51 -->
+
+- [x] **Refinements (User Request)**
+    - [x] **Sales**: Add Payment Terms (Cash/Credit) <!-- id: 90 -->
+    - [x] **Production**: Update Paulistão Weight to 16kg <!-- id: 91 -->
+    - [x] **Purchases**: Display Cost per Kg in Purchase Order <!-- id: 92 -->
+    - [x] **Purchases**: Add Supplier Registration Page <!-- id: 96 -->
+    - [x] **Purchases**: Refactor Logic (Input Total Price -> Calc Unit Price) <!-- id: 97 -->
+    - [x] **Purchases**: Refactor Logic (Input Unit Price -> Calc Total Price) <!-- id: 100 -->
+    - [x] **Purchases**: Format Total Value as BRL (e.g., 20.000,00) <!-- id: 101 -->
+    - [x] **Purchases**: Add Remove Item Functionality to Recalculate Total <!-- id: 102 -->
+    - [x] **Purchases**: Add Status Selector and Receive Button to Purchase Workflow <!-- id: 98 -->
+    - [x] Implement Edit Functionality for Purchases, Production, and Sales with Audit Logging
+        - [x] Update `useAppStore.ts` with update actions and inventory reconciliation
+        - [x] Update `Compras.tsx` with Edit UI
+        - [x] Update `Production.tsx` with Edit UI
+        - [x] Update `Sales.tsx` with Edit UI
+    - [x] **Smart Notifications**
+    - [x] Define Notification types
+    - [x] Add notification logic to store (low stock, overdue bills)
+    - [x] Add Notification UI (Bell icon, dropdown) Purchases, Sales, and Production UI
+    - [x] Verify access control and inventory updates
+- [x] **Dashboard Upgrade**: Implement interactive charts
+    - [x] Install `recharts`
+    - [x] Implement Sales Trend Chart
+    - [x] Implement Production vs Loss Chart
+    - [x] Implement Top Customers Chart
+- [x] **DRE (Financial Statement)**
+    - [x] Create DRE page/module
+    - [x] Implement calculation logic (Revenue, CMV, Expenses, Profit)
+    - [x] Design Report UI
+- [x] **Backup & Restore**: Implement Excel export/import
+    - [x] Install `xlsx`
+    - [x] Create Settings page with Export/Import logic
+    - [x] Implement `restoreData` action in store
+    - [x] Add "Configurações" link to sidebar (Admin only)conciliation
+    - [x] Restrict Edit Button to Admin Users Only
+    - [x] **Security**: Admin Reset Password Button <!-- id: 93 -->
+    - [x] **Security**: User Change Password Modal <!-- id: 94 -->
+    - [x] **Documentation**: Create User Manual <!-- id: 95 -->
+- [x] **Deployment**: Deploy to Easypanel <!-- id: 99 -->
+
+- [x] **Deployment**
+    - [x] Create Netlify configuration (netlify.toml) <!-- id: 60 -->
+    - [x] Create Nginx configuration (nginx.conf) <!-- id: 63 -->
+    - [x] Create Dockerfile for Easypanel <!-- id: 65 -->
+    - [x] Build project for production <!-- id: 61 -->
+    - [x] Push to GitHub <!-- id: 66 -->
+    - [x] Deploy to Easypanel <!-- id: 64 -->
+    - [x] **Shipment Completion** <!-- id: 15 -->
+    - [x] Add `updateShipmentStatus` action <!-- id: 16 -->
+    - [x] Add buttons to advance shipment status <!-- id: 17 -->
+
+- [ ] **Admin Features**
+    - [x] **User Management**
+        - [x] Update Store to support dynamic users <!-- id: 70 -->
+        - [x] Create User Management Page (Admin only) <!-- id: 71 -->
+        - [x] Update Login Screen (Username/Password) <!-- id: 72 -->
+    - [x] **Standardizing Admin Actions** <!-- id: 10 -->
+        - [x] Add `updateUser`, `updateCustomer`, `removeCustomer` to store <!-- id: 11 -->
+        - [x] Add `updatePriceTable`, `removePriceTable` to store <!-- id: 12 -->
+        - [x] Implement Edit/Delete UI for Users <!-- id: 13 -->
+        - [x] Implement Edit/Delete UI for Customers & Price Tables <!-- id: 14 -->
+    - [x] **Reporting**
+        - [x] Add Print styles and buttons for reports <!-- id: 73 -->
+
+- [ ] **Advanced Control Features**
+    - [x] **Audit Log (Security)**
+        - [x] Create AuditLog type and store logic <!-- id: 80 -->
+        - [x] Create Audit Logs page (Admin only) <!-- id: 81 -->
+        - [x] Instrument key actions (Login, Sales, Stock) <!-- id: 82 -->
+    - [x] **Credit Limit Lock (Sales)**
+        - [x] Update Sale logic to check Customer Credit Limit <!-- id: 83 -->
+        - [x] Block sale if limit exceeded <!-- id: 84 -->
+    - [x] **Projected Cash Flow (Financial)**
+        - [x] Create Cash Flow Projection Chart <!-- id: 85 -->
+        - [x] Calculate future balance based on due dates <!-- id: 86 -->
+
+- [x] **Production Enhancements (User Request)**
+    - [x] **Stock Tracking**: Auto-fill input based on available raw material <!-- id: 110 -->
+    - [x] **Validation**: Prevent negative values and output > input <!-- id: 111 -->
+    - [x] **Optimization**: Suggest best bag combination to minimize waste <!-- id: 112 -->
+
+- [x] **DRE Refinement (User Request)**
+    - [x] **Configuration**: Add Settings for Tax, CMV, and Fixed Labor <!-- id: 113 -->
+    - [x] **Calculation**: Update DRE logic to use configured values <!-- id: 114 -->
+    - [x] **Fix**: Resolve build error in DRE component <!-- id: 115 -->
+
+- [x] **Mobile & Supplier Enhancements (User Request)**
+    - [x] **Mobile Layout**: Add hamburger menu and responsive sidebar <!-- id: 120 -->
+    - [x] **Supplier Management**: Add Edit/Delete buttons (Admin only) <!-- id: 121 -->
