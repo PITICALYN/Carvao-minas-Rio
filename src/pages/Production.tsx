@@ -328,9 +328,10 @@ export const Production = () => {
                                                 if (parseFloat(e.target.value) < 0) return;
                                                 setInputWeight(e.target.value);
                                             }}
-                                            className="w-full input-field px-4 py-2 pl-10"
+                                            className={`w-full input-field px-4 py-2 pl-10 ${maxStock <= 0 && !currentBatchId ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             placeholder="0.00"
                                             required
+                                            disabled={maxStock <= 0 && !currentBatchId}
                                         />
                                         <Scale className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                                     </div>
@@ -338,6 +339,7 @@ export const Production = () => {
                                         <div className="mt-2">
                                             <p className={`text-xs ${parseFloat(inputWeight) > maxStock ? 'text-red-400 font-bold' : 'text-slate-500'}`}>
                                                 Disponível: {maxStock.toFixed(2)} kg
+                                                {maxStock <= 0 && !currentBatchId && <span className="text-red-400 font-bold ml-2">(Sem estoque disponível)</span>}
                                             </p>
 
                                             {/* Optimization Suggestion */}
@@ -434,8 +436,9 @@ export const Production = () => {
                                                     newOutputs[idx].qty = val;
                                                     setOutputs(newOutputs);
                                                 }}
-                                                className="flex-1 input-field px-4 py-2"
+                                                className={`flex-1 input-field px-4 py-2 ${(!inputWeight || parseFloat(inputWeight) <= 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                 placeholder="Qtd Sacos"
+                                                disabled={!inputWeight || parseFloat(inputWeight) <= 0}
                                             />
                                         </div>
                                     ))}
