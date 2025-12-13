@@ -67,6 +67,14 @@ interface AppState {
     markNotificationAsRead: (id: string) => void;
     clearNotifications: () => void;
     checkNotifications: () => void;
+
+    // Settings
+    dreSettings: {
+        taxRate: number; // %
+        cmvRate: number; // % (Fallback if no real data)
+        fixedLaborCost: number; // R$
+    };
+    updateDreSettings: (settings: { taxRate: number; cmvRate: number; fixedLaborCost: number }) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -495,6 +503,17 @@ export const useAppStore = create<AppState>()(
                     set({ notifications: [...uniqueNewNotifications, ...state.notifications] });
                 }
             },
+
+            // Settings
+            dreSettings: {
+                taxRate: 6, // Default 6% (Simples Nacional approx)
+                cmvRate: 40, // Default 40%
+                fixedLaborCost: 0
+            },
+
+            updateDreSettings: (settings) => set(() => ({
+                dreSettings: settings
+            })),
 
         }),
         {

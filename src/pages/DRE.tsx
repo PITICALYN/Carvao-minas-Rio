@@ -31,31 +31,27 @@ export const DRE = () => {
         // 1. Gross Revenue (Receita Bruta)
         const grossRevenue = periodSales.reduce((acc, sale) => acc + sale.totalAmount, 0);
 
-        // 2. Deductions (Impostos, Devoluções - Placeholder for now)
-        const deductions = 0;
+        // 2. Deductions (Impostos)
+        // Use configured Tax Rate
+        const taxRate = useAppStore.getState().dreSettings?.taxRate ?? 6;
+        const deductions = grossRevenue * (taxRate / 100);
 
         // 3. Net Revenue (Receita Líquida)
         const netRevenue = grossRevenue - deductions;
 
-        // 4. Cost of Goods Sold (CMV - Custo da Mercadoria Vendida)
-        // Ideally this should be calculated based on inventory cost, but for now we can approximate 
-        // or use purchase orders if we assume direct sales-purchase link (which is not always true).
-        // A better approximation for this MVP might be a fixed percentage or derived from production costs if available.
-        // Let's use a simplified approach: Sum of Purchase Orders for raw materials in this period (Cash Basis) 
-        // OR better: standard cost per unit * units sold.
-        // Let's go with Standard Cost estimation for now as we don't have strict batch tracking cost yet.
-        // Assuming average cost of 30% of sales price for demonstration, or 0 if no data.
-        // TODO: Refine this with real production cost data.
-        const cmv = periodSales.reduce((acc, sale) => {
-            // Placeholder: 40% of sales value is cost (Charcoal + Packaging + Transport)
-            return acc + (sale.totalAmount * 0.4);
-        }, 0);
+        // 4. Cost of Goods Sold (CMV)
+        // Use configured CMV Rate
+        const cmvRate = useAppStore.getState().dreSettings?.cmvRate ?? 40;
+        const cmv = grossRevenue * (cmvRate / 100);
 
         // 5. Gross Profit (Lucro Bruto)
         const grossProfit = netRevenue - cmv;
 
         // 6. Operating Expenses (Despesas Operacionais)
-        const operatingExpenses = periodExpenses.reduce((acc, t) => acc + t.amount, 0);
+        // Sum of expenses + Fixed Labor Cost
+        const fixedLaborCost = useAppStore.getState().dreSettings?.fixedLaborCost ?? 0;
+        const variableExpenses = periodExpenses.reduce((acc, t) => acc + t.amount, 0);
+        const operatingExpenses = variableExpenses + fixedLaborCost;
 
         // 7. Net Profit (Lucro Líquido)
         const netProfit = grossProfit - operatingExpenses;
@@ -203,49 +199,50 @@ export const DRE = () => {
                         </div>
 
                         {/* 4. CMV */}
-                        <div className="p-4 hover:bg-white/5 transition-colors bg-red-500/5">
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-slate-300">(-) Custo da Mercadoria Vendida (CMV)</span>
-                                <span className="text-red-400">{formatCurrency(financialData.cmv)}</span>
-                            </div>
-                            <div className="text-xs text-slate-500">Estimado em 40% sobre a receita bruta (Matéria-prima, Embalagem, Frete)</div>
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-slate-300">(-) Custo da Mercadoria Vendida (CMV)</span>
+                            <span className="text-red-400">{formatCurrency(financialData.cmv)}</span>
                         </div>
-
-                        {/* 5. Lucro Bruto */}
-                        <div className="p-4 bg-slate-800/50 font-bold border-y border-white/10">
-                            <div className="flex justify-between items-center">
-                                <span className="text-white">(=) Lucro Bruto</span>
-                                <span className="text-white">{formatCurrency(financialData.grossProfit)}</span>
-                            </div>
-                            <div className="text-right text-xs text-slate-400 mt-1">
-                                Margem Bruta: {getPercentage(financialData.grossProfit, financialData.netRevenue)}
-                            </div>
+                        <div className="text-xs text-slate-500">
+                            Estimado em {useAppStore.getState().dreSettings?.cmvRate ?? 40}% sobre a receita bruta (Matéria-prima, Embalagem)
                         </div>
+                    </div>
 
-                        {/* 6. Despesas Operacionais */}
-                        <div className="p-4 hover:bg-white/5 transition-colors bg-red-500/5">
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-slate-300">(-) Despesas Operacionais</span>
-                                <span className="text-red-400">{formatCurrency(financialData.operatingExpenses)}</span>
-                            </div>
-                            <div className="text-xs text-slate-500">Contas pagas, salários, manutenção, etc.</div>
+                    {/* 5. Lucro Bruto */}
+                    <div className="p-4 bg-slate-800/50 font-bold border-y border-white/10">
+                        <div className="flex justify-between items-center">
+                            <span className="text-white">(=) Lucro Bruto</span>
+                            <span className="text-white">{formatCurrency(financialData.grossProfit)}</span>
                         </div>
+                        <div className="text-right text-xs text-slate-400 mt-1">
+                            Margem Bruta: {getPercentage(financialData.grossProfit, financialData.netRevenue)}
+                        </div>
+                    </div>
 
-                        {/* 7. Lucro Líquido */}
-                        <div className="p-6 bg-emerald-900/20 font-bold text-lg border-t border-white/10">
-                            <div className="flex justify-between items-center">
-                                <span className="text-emerald-400">(=) Resultado Líquido do Exercício</span>
-                                <span className={financialData.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                                    {formatCurrency(financialData.netProfit)}
-                                </span>
-                            </div>
-                            <div className="text-right text-sm text-slate-400 mt-1 font-normal">
-                                Margem Líquida: {getPercentage(financialData.netProfit, financialData.netRevenue)}
-                            </div>
+                    {/* 6. Despesas Operacionais */}
+                    <div className="p-4 hover:bg-white/5 transition-colors bg-red-500/5">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-slate-300">(-) Despesas Operacionais</span>
+                            <span className="text-red-400">{formatCurrency(financialData.operatingExpenses)}</span>
+                        </div>
+                        <div className="text-xs text-slate-500">Contas pagas, salários, manutenção, etc.</div>
+                    </div>
+
+                    {/* 7. Lucro Líquido */}
+                    <div className="p-6 bg-emerald-900/20 font-bold text-lg border-t border-white/10">
+                        <div className="flex justify-between items-center">
+                            <span className="text-emerald-400">(=) Resultado Líquido do Exercício</span>
+                            <span className={financialData.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                                {formatCurrency(financialData.netProfit)}
+                            </span>
+                        </div>
+                        <div className="text-right text-sm text-slate-400 mt-1 font-normal">
+                            Margem Líquida: {getPercentage(financialData.netProfit, financialData.netRevenue)}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        </div >
     );
 };

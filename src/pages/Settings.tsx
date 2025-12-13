@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Download, Upload, AlertTriangle, Save, RefreshCw } from 'lucide-react';
+import { Download, Upload, AlertTriangle, Save, RefreshCw, DollarSign } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export const Settings = () => {
@@ -172,6 +172,75 @@ export const Settings = () => {
                         <Upload className="w-5 h-5" />
                         Selecionar Arquivo de Backup
                     </label>
+                </div>
+            </div>
+
+            {/* DRE Configuration */}
+            <div className="glass-card p-6 rounded-2xl border border-white/5 mt-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400">
+                        <DollarSign className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-white">Configurações do DRE</h3>
+                        <p className="text-sm text-slate-400">Defina as taxas e custos fixos para o relatório financeiro.</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Impostos (%)</label>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                value={store.dreSettings?.taxRate ?? 6}
+                                onChange={(e) => store.updateDreSettings({
+                                    ...store.dreSettings,
+                                    taxRate: Number(e.target.value)
+                                })}
+                                className="w-full input-field px-4 py-2 pr-8"
+                                placeholder="0.00"
+                            />
+                            <span className="absolute right-3 top-2 text-slate-500">%</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Incide sobre a Receita Bruta.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">CMV Estimado (%)</label>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                value={store.dreSettings?.cmvRate ?? 40}
+                                onChange={(e) => store.updateDreSettings({
+                                    ...store.dreSettings,
+                                    cmvRate: Number(e.target.value)
+                                })}
+                                className="w-full input-field px-4 py-2 pr-8"
+                                placeholder="0.00"
+                            />
+                            <span className="absolute right-3 top-2 text-slate-500">%</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Custo de Matéria-prima/Embalagem sobre Vendas.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Mão de Obra Fixa (R$)</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-2 text-slate-500">R$</span>
+                            <input
+                                type="number"
+                                value={store.dreSettings?.fixedLaborCost ?? 0}
+                                onChange={(e) => store.updateDreSettings({
+                                    ...store.dreSettings,
+                                    fixedLaborCost: Number(e.target.value)
+                                })}
+                                className="w-full input-field px-4 py-2 pl-10"
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Adicionado automaticamente às Despesas Operacionais.</p>
+                    </div>
                 </div>
             </div>
         </div>
