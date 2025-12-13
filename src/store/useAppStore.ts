@@ -10,6 +10,8 @@ interface AppState {
 
     // Actions
     addSupplier: (supplier: Supplier) => void;
+    updateSupplier: (supplier: Supplier) => void;
+    removeSupplier: (id: string) => void;
     addProductionBatch: (batch: ProductionBatch) => void;
     addSale: (sale: Sale) => void;
     transferStock: (from: Location, to: Location, type: ProductType, quantity: number) => void;
@@ -159,6 +161,35 @@ export const useAppStore = create<AppState>()(
             addSupplier: (supplier) => set((state) => ({
                 suppliers: [...state.suppliers, supplier]
             })),
+
+            updateSupplier: (updatedSupplier) => set((state) => {
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Supplier',
+                    `Updated Supplier: ${updatedSupplier.name}`,
+                    updatedSupplier.id
+                );
+                return {
+                    suppliers: state.suppliers.map(s => s.id === updatedSupplier.id ? updatedSupplier : s)
+                };
+            }),
+
+            removeSupplier: (id) => set((state) => {
+                const supplier = state.suppliers.find(s => s.id === id);
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Delete',
+                    'Supplier',
+                    `Deleted Supplier: ${supplier?.name || id}`,
+                    id
+                );
+                return {
+                    suppliers: state.suppliers.filter(s => s.id !== id)
+                };
+            }),
 
             addProductionBatch: (batch) => set((state) => {
                 // Update inventory

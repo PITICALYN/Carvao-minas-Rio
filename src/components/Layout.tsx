@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Truck, Factory, Package, ShoppingCart, LogOut, User, Users, ShoppingBag, DollarSign, PieChart, Shield, Lock, Settings, Bell, X, Check, FileText } from 'lucide-react';
+import { LayoutDashboard, Truck, Factory, Package, ShoppingCart, LogOut, User, Users, ShoppingBag, DollarSign, PieChart, Shield, Lock, Settings, Bell, X, Check, FileText, Menu } from 'lucide-react';
 import clsx from 'clsx';
 import { useAppStore } from '../store/useAppStore';
 
@@ -26,10 +26,17 @@ const NavItem = ({ to, icon: Icon, label }: { to: string; icon: React.ElementTyp
 
 export const Layout = () => {
     const { currentUser, logout } = useAppStore();
+    const location = useLocation();
 
     const [isChangePasswordOpen, setIsChangePasswordOpen] = React.useState(false);
     const [newPassword, setNewPassword] = React.useState('');
     const [confirmPassword, setConfirmPassword] = React.useState('');
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+    // Close mobile menu when route changes
+    React.useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [location.pathname]);
 
     const handleChangePassword = (e: React.FormEvent) => {
         e.preventDefault();
@@ -83,9 +90,30 @@ export const Layout = () => {
     };
 
     return (
-        <div className="flex h-screen overflow-hidden">
+        <div className="flex h-screen overflow-hidden bg-slate-950">
+            {/* Mobile Menu Button */}
+            <div className="md:hidden fixed top-4 left-4 z-50">
+                <button
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    className="p-2 bg-slate-800 text-white rounded-lg border border-white/10 shadow-lg"
+                >
+                    {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </button>
+            </div>
+
+            {/* Mobile Overlay */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-30 md:hidden"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-64 glass-panel border-r border-white/5 flex flex-col z-20">
+            <aside className={clsx(
+                "fixed md:static inset-y-0 left-0 w-64 glass-panel border-r border-white/5 flex flex-col z-40 transition-transform duration-300 ease-in-out transform",
+                isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+            )}>
                 <div className="p-8 flex flex-col items-center">
                     <img src="/logo.jpg" alt="Minas Rio" className="h-24 w-auto mb-2 rounded-lg" />
                     <p className="text-xs text-slate-400">Gestão Inteligente</p>
@@ -179,7 +207,7 @@ export const Layout = () => {
 
                     {/* Notification Dropdown (Sidebar Popover style) */}
                     {isNotificationsOpen && (
-                        <div className="absolute left-64 top-4 bottom-4 w-80 glass-panel border border-white/10 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden ml-2">
+                        <div className="absolute left-64 bottom-4 w-80 glass-panel border border-white/10 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden ml-2 max-h-[400px]">
                             <div className="p-4 border-b border-white/10 flex justify-between items-center bg-slate-900/50">
                                 <h3 className="font-bold text-white">Notificações</h3>
                                 <div className="flex gap-2">
@@ -252,7 +280,7 @@ export const Layout = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 p-8 overflow-y-auto">
+            <main className="flex-1 p-4 md:p-8 overflow-y-auto pt-16 md:pt-8">
                 <div className="max-w-7xl mx-auto">
                     <Outlet />
                 </div>
