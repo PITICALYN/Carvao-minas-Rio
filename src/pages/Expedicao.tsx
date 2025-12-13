@@ -138,6 +138,30 @@ export const Expedicao = () => {
                                         </div>
                                     ))}
                                 </div>
+
+                                <div className="pt-4 border-t border-white/5 flex gap-2">
+                                    {shipment.status === 'Planned' && (
+                                        <button
+                                            onClick={() => useAppStore.getState().updateShipmentStatus(shipment.id, 'InTransit')}
+                                            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                                        >
+                                            Iniciar Entrega
+                                        </button>
+                                    )}
+                                    {shipment.status === 'InTransit' && (
+                                        <button
+                                            onClick={() => useAppStore.getState().updateShipmentStatus(shipment.id, 'Delivered')}
+                                            className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                                        >
+                                            Concluir Entrega
+                                        </button>
+                                    )}
+                                    {shipment.status === 'Delivered' && (
+                                        <div className="flex-1 text-center py-2 text-emerald-400 text-sm font-medium bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                                            Entrega Finalizada
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         ))}
 

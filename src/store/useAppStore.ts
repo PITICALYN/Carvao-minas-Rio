@@ -60,6 +60,7 @@ interface AppState {
     shipments: Shipment[];
     addDriver: (driver: Driver) => void;
     addShipment: (shipment: Shipment) => void;
+    updateShipmentStatus: (id: string, status: 'Planned' | 'InTransit' | 'Delivered') => void;
 
     // Audit Log
     auditLogs: AuditLog[];
@@ -368,6 +369,20 @@ export const useAppStore = create<AppState>()(
             addShipment: (shipment) => set((state) => ({
                 shipments: [...state.shipments, shipment]
             })),
+
+            updateShipmentStatus: (id, status) => set((state) => {
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Sale', // Shipment relates to sales/logistics
+                    `Updated Shipment Status: ${status}`,
+                    id
+                );
+                return {
+                    shipments: state.shipments.map(s => s.id === id ? { ...s, status } : s)
+                };
+            }),
 
             updatePurchaseOrderStatus: (id, status) => set((state) => ({
                 purchaseOrders: state.purchaseOrders.map(po =>
