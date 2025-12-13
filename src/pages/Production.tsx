@@ -232,7 +232,39 @@ export const Production = () => {
                                     <label className="block text-sm font-medium text-slate-300 mb-1">Fornecedor</label>
                                     <select
                                         value={supplierId}
-                                        onChange={(e) => setSupplierId(e.target.value)}
+                                        onChange={(e) => {
+                                            const newSupplierId = e.target.value;
+                                            setSupplierId(newSupplierId);
+
+                                            // Auto-fill Input Weight based on available stock
+                                            if (newSupplierId) {
+                                                const { purchaseOrders, productionBatches } = useAppStore.getState();
+
+                                                // 1. Calculate Total Received from POs
+                                                const totalReceived = purchaseOrders
+                                                    .filter(po => po.supplierId === newSupplierId && po.status === 'Received')
+                                                    .reduce((acc, po) => {
+                                                        // Sum up relevant raw material items (Charcoal_Bulk, Eucalyptus, Pinus)
+                                                        const rawMaterialItems = po.items.filter(item =>
+                                                            ['Charcoal_Bulk', 'Eucalyptus', 'Pinus'].includes(item.materialType)
+                                                        );
+                                                        return acc + rawMaterialItems.reduce((sum, item) => sum + item.quantity, 0);
+                                                    }, 0);
+
+                                                // 2. Calculate Total Consumed by Production
+                                                const totalConsumed = productionBatches
+                                                    .filter(batch => batch.supplierId === newSupplierId)
+                                                    .reduce((acc, batch) => acc + batch.inputWeightKg, 0);
+
+                                                const availableStock = Math.max(0, totalReceived - totalConsumed);
+
+                                                if (availableStock > 0) {
+                                                    setInputWeight(availableStock.toString());
+                                                }
+                                            } else {
+                                                setInputWeight('');
+                                            }
+                                        }}
                                         className="w-full input-field px-4 py-2"
                                         required
                                     >
@@ -255,6 +287,11 @@ export const Production = () => {
                                         />
                                         <Scale className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                                     </div>
+                                    {supplierId && (
+                                        <p className="text-xs text-slate-500 mt-1">
+                                            *Preenchido automaticamente com o saldo de estoque calculado.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
