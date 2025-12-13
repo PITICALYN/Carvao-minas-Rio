@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Search, MapPin, Phone, Mail, FileText, DollarSign } from 'lucide-react';
+import { Plus, Search, MapPin, Phone, Mail, FileText, DollarSign, Edit, Trash2 } from 'lucide-react';
 import { type Customer, type PriceTable } from '../types';
 
 export const Comercial = () => {
-    const { customers, addCustomer, priceTables, addPriceTable } = useAppStore();
+    const {
+        customers, addCustomer, updateCustomer, removeCustomer,
+        priceTables, addPriceTable, updatePriceTable, removePriceTable,
+        currentUser
+    } = useAppStore();
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'customers' | 'prices'>('customers');
+
+    // Edit State
+    const [currentCustomerId, setCurrentCustomerId] = useState<string | null>(null);
+    const [currentPriceTableId, setCurrentPriceTableId] = useState<string | null>(null);
 
     // Customer Form State
     const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({
@@ -35,34 +44,88 @@ export const Comercial = () => {
         e.preventDefault();
         if (!newCustomer.name || !newCustomer.document) return;
 
-        addCustomer({
-            id: crypto.randomUUID(),
-            name: newCustomer.name,
-            document: newCustomer.document,
-            email: newCustomer.email,
-            phone: newCustomer.phone,
-            address: newCustomer.address || '',
-            creditLimit: Number(newCustomer.creditLimit),
-            paymentTerms: newCustomer.paymentTerms || '30 dias',
-            ...newCustomer
-        } as Customer);
+        if (currentCustomerId) {
+            updateCustomer({
+                id: currentCustomerId,
+                name: newCustomer.name,
+                document: newCustomer.document,
+                email: newCustomer.email,
+                phone: newCustomer.phone,
+                address: newCustomer.address || '',
+                creditLimit: Number(newCustomer.creditLimit),
+                paymentTerms: newCustomer.paymentTerms || '30 dias',
+                ...newCustomer
+            } as Customer);
+        } else {
+            addCustomer({
+                id: crypto.randomUUID(),
+                name: newCustomer.name,
+                document: newCustomer.document,
+                email: newCustomer.email,
+                phone: newCustomer.phone,
+                address: newCustomer.address || '',
+                creditLimit: Number(newCustomer.creditLimit),
+                paymentTerms: newCustomer.paymentTerms || '30 dias',
+                ...newCustomer
+            } as Customer);
+        }
 
         setIsModalOpen(false);
+        resetCustomerForm();
+    };
+
+    const resetCustomerForm = () => {
+        setCurrentCustomerId(null);
         setNewCustomer({ name: '', document: '', email: '', phone: '', address: '', creditLimit: 0, paymentTerms: '30 dias' });
+    };
+
+    const handleEditCustomer = (customer: Customer) => {
+        setCurrentCustomerId(customer.id);
+        setNewCustomer({ ...customer });
+        setIsModalOpen(true);
+    };
+
+    const handleNewCustomer = () => {
+        resetCustomerForm();
+        setIsModalOpen(true);
     };
 
     const handlePriceTableSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!newPriceTable.name) return;
 
-        addPriceTable({
-            id: crypto.randomUUID(),
-            name: newPriceTable.name,
-            prices: newPriceTable.prices || {}
-        } as PriceTable);
+        if (currentPriceTableId) {
+            updatePriceTable({
+                id: currentPriceTableId,
+                name: newPriceTable.name,
+                prices: newPriceTable.prices || {}
+            } as PriceTable);
+        } else {
+            addPriceTable({
+                id: crypto.randomUUID(),
+                name: newPriceTable.name,
+                prices: newPriceTable.prices || {}
+            } as PriceTable);
+        }
 
         setIsPriceModalOpen(false);
+        resetPriceTableForm();
+    };
+
+    const resetPriceTableForm = () => {
+        setCurrentPriceTableId(null);
         setNewPriceTable({ name: '', prices: { '3kg': 0, '5kg': 0, 'Paulistao': 0, 'Bulk': 0 } });
+    };
+
+    const handleEditPriceTable = (table: PriceTable) => {
+        setCurrentPriceTableId(table.id);
+        setNewPriceTable({ ...table });
+        setIsPriceModalOpen(true);
+    };
+
+    const handleNewPriceTable = () => {
+        resetPriceTableForm();
+        setIsPriceModalOpen(true);
     };
 
     return (
@@ -97,7 +160,7 @@ export const Comercial = () => {
                             />
                         </div>
                         <button
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={handleNewCustomer}
                             className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg"
                         >
                             <Plus className="w-4 h-4" />
@@ -107,7 +170,29 @@ export const Comercial = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {customers.map(customer => (
-                            <div key={customer.id} className="glass-card p-5 rounded-xl space-y-4">
+                            <div key={customer.id} className="glass-card p-5 rounded-xl space-y-4 relative group">
+                                {currentUser?.role === 'Admin' && (
+                                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => handleEditCustomer(customer)}
+                                            className="p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors"
+                                            title="Editar"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                                                    removeCustomer(customer.id);
+                                                }
+                                            }}
+                                            className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                                            title="Excluir"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <h3 className="font-bold text-white text-lg">{customer.name}</h3>
@@ -161,7 +246,7 @@ export const Comercial = () => {
                 <>
                     <div className="flex justify-end mb-6">
                         <button
-                            onClick={() => setIsPriceModalOpen(true)}
+                            onClick={handleNewPriceTable}
                             className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg"
                         >
                             <Plus className="w-4 h-4" />
@@ -171,7 +256,29 @@ export const Comercial = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {priceTables.map(table => (
-                            <div key={table.id} className="glass-card p-5 rounded-xl space-y-4">
+                            <div key={table.id} className="glass-card p-5 rounded-xl space-y-4 relative group">
+                                {currentUser?.role === 'Admin' && (
+                                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => handleEditPriceTable(table)}
+                                            className="p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors"
+                                            title="Editar"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (confirm('Tem certeza que deseja excluir esta tabela?')) {
+                                                    removePriceTable(table.id);
+                                                }
+                                            }}
+                                            className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                                            title="Excluir"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
                                 <div className="flex items-center gap-3 mb-2">
                                     <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
                                         <DollarSign className="w-5 h-5" />
@@ -203,7 +310,7 @@ export const Comercial = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
-                        <h2 className="text-xl font-bold text-white mb-4">Novo Cliente</h2>
+                        <h2 className="text-xl font-bold text-white mb-4">{currentCustomerId ? 'Editar Cliente' : 'Novo Cliente'}</h2>
                         <form onSubmit={handleCustomerSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-300 mb-1">Nome / Razão Social</label>
@@ -292,7 +399,7 @@ export const Comercial = () => {
                                     type="submit"
                                     className="btn-primary px-6 py-2 rounded-lg"
                                 >
-                                    Salvar Cliente
+                                    {currentCustomerId ? 'Salvar Alterações' : 'Salvar Cliente'}
                                 </button>
                             </div>
                         </form>
@@ -304,7 +411,7 @@ export const Comercial = () => {
             {isPriceModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
-                        <h2 className="text-xl font-bold text-white mb-4">Nova Tabela de Preço</h2>
+                        <h2 className="text-xl font-bold text-white mb-4">{currentPriceTableId ? 'Editar Tabela' : 'Nova Tabela de Preço'}</h2>
                         <form onSubmit={handlePriceTableSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-300 mb-1">Nome da Tabela</label>
@@ -352,7 +459,7 @@ export const Comercial = () => {
                                     type="submit"
                                     className="btn-primary px-6 py-2 rounded-lg"
                                 >
-                                    Salvar Tabela
+                                    {currentPriceTableId ? 'Salvar Alterações' : 'Salvar Tabela'}
                                 </button>
                             </div>
                         </form>

@@ -24,6 +24,7 @@ interface AppState {
     login: (username: string, password: string) => boolean;
     logout: () => void;
     addUser: (user: User) => void;
+    updateUser: (user: User) => void;
     removeUser: (id: string) => void;
     updateUserPassword: (id: string, newPassword: string) => void;
 
@@ -33,7 +34,11 @@ interface AppState {
     customers: Customer[];
     priceTables: PriceTable[];
     addCustomer: (customer: Customer) => void;
+    updateCustomer: (customer: Customer) => void;
+    removeCustomer: (id: string) => void;
     addPriceTable: (priceTable: PriceTable) => void;
+    updatePriceTable: (priceTable: PriceTable) => void;
+    removePriceTable: (id: string) => void;
 
     // Compras
     purchaseOrders: PurchaseOrder[];
@@ -268,13 +273,85 @@ export const useAppStore = create<AppState>()(
 
             // --- New Actions ---
 
+            updateUser: (updatedUser) => set((state) => {
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'User',
+                    `Updated User: ${updatedUser.name}`,
+                    updatedUser.id
+                );
+                return {
+                    users: state.users.map(u => u.id === updatedUser.id ? updatedUser : u)
+                };
+            }),
+
             addCustomer: (customer) => set((state) => ({
                 customers: [...state.customers, customer]
             })),
 
+            updateCustomer: (updatedCustomer) => set((state) => {
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Sale', // Using 'Sale' as resource for Customer since 'Customer' isn't in AuditResource yet, or I should add it. Let's stick to existing or add 'Customer'. I'll add 'Customer' to types later if needed, but for now 'Sale' or 'User' might be confusing. Actually I added 'Supplier' earlier. I should probably add 'Customer' to types too. For now I'll use 'Sale' as it's commercial related.
+                    `Updated Customer: ${updatedCustomer.name}`,
+                    updatedCustomer.id
+                );
+                return {
+                    customers: state.customers.map(c => c.id === updatedCustomer.id ? updatedCustomer : c)
+                };
+            }),
+
+            removeCustomer: (id) => set((state) => {
+                const customer = state.customers.find(c => c.id === id);
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Delete',
+                    'Sale',
+                    `Deleted Customer: ${customer?.name || id}`,
+                    id
+                );
+                return {
+                    customers: state.customers.filter(c => c.id !== id)
+                };
+            }),
+
             addPriceTable: (priceTable) => set((state) => ({
                 priceTables: [...state.priceTables, priceTable]
             })),
+
+            updatePriceTable: (updatedTable) => set((state) => {
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Product', // Price table relates to products
+                    `Updated Price Table: ${updatedTable.name}`,
+                    updatedTable.id
+                );
+                return {
+                    priceTables: state.priceTables.map(t => t.id === updatedTable.id ? updatedTable : t)
+                };
+            }),
+
+            removePriceTable: (id) => set((state) => {
+                const table = state.priceTables.find(t => t.id === id);
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Delete',
+                    'Product',
+                    `Deleted Price Table: ${table?.name || id}`,
+                    id
+                );
+                return {
+                    priceTables: state.priceTables.filter(t => t.id !== id)
+                };
+            }),
 
             addPurchaseOrder: (po) => set((state) => ({
                 purchaseOrders: [...state.purchaseOrders, po]

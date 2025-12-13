@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type UserRole, PERMISSIONS } from '../types';
-import { Plus, Trash2, Shield, User as UserIcon, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Shield, User as UserIcon, RefreshCw, Edit } from 'lucide-react';
 
 export const Users = () => {
-    const { users, addUser, removeUser, currentUser } = useAppStore();
+    const { users, addUser, updateUser, removeUser, currentUser } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     // Form State
     const [name, setName] = useState('');
@@ -26,23 +27,62 @@ export const Users = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        addUser({
-            id: crypto.randomUUID(),
-            name,
-            username,
-            password,
-            role,
-            canPrint,
-            permissions
-        });
+
+        if (currentUserId) {
+            // Update existing user
+            // Find existing user to keep password if not changed (though here we require password in form, 
+            // maybe we should make it optional for edit? For now let's assume admin resets it or re-enters it.
+            // Actually, the form requires password. Let's keep it simple: Admin sets password.
+            updateUser({
+                id: currentUserId,
+                name,
+                username,
+                password, // In a real app, handle password update separately or optionally
+                role,
+                canPrint,
+                permissions
+            });
+        } else {
+            // Create new user
+            addUser({
+                id: crypto.randomUUID(),
+                name,
+                username,
+                password,
+                role,
+                canPrint,
+                permissions
+            });
+        }
+
         setIsModalOpen(false);
-        // Reset form
+        resetForm();
+    };
+
+    const resetForm = () => {
+        setCurrentUserId(null);
         setName('');
         setUsername('');
         setPassword('');
         setRole('Factory');
         setCanPrint(false);
         setPermissions([]);
+    };
+
+    const handleEdit = (user: any) => {
+        setCurrentUserId(user.id);
+        setName(user.name);
+        setUsername(user.username);
+        setPassword(user.password || ''); // Populate if available, or empty
+        setRole(user.role);
+        setCanPrint(user.canPrint || false);
+        setPermissions(user.permissions || []);
+        setIsModalOpen(true);
+    };
+
+    const handleNew = () => {
+        resetForm();
+        setIsModalOpen(true);
     };
 
     return (
@@ -53,7 +93,7 @@ export const Users = () => {
                     <p className="text-slate-400">Gerencie o acesso da sua equipe</p>
                 </div>
                 <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleNew}
                     className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
                 >
                     <Plus className="w-4 h-4" />
@@ -93,6 +133,13 @@ export const Users = () => {
                         {user.username !== 'admin' && (
                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
+                                    onClick={() => handleEdit(user)}
+                                    className="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                    title="Editar Usuário"
+                                >
+                                    <Edit className="w-5 h-5" />
+                                </button>
+                                <button
                                     onClick={() => {
                                         if (confirm(`Resetar senha de ${user.name} para '123'?`)) {
                                             useAppStore.getState().updateUserPassword(user.id, '123');
@@ -121,7 +168,7 @@ export const Users = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl">
-                        <h2 className="text-xl font-bold text-white mb-6">Novo Usuário</h2>
+                        <h2 className="text-xl font-bold text-white mb-6">{currentUserId ? 'Editar Usuário' : 'Novo Usuário'}</h2>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
@@ -224,7 +271,7 @@ export const Users = () => {
                                     type="submit"
                                     className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
                                 >
-                                    Criar Usuário
+                                    {currentUserId ? 'Salvar Alterações' : 'Criar Usuário'}
                                 </button>
                             </div>
                         </form>
