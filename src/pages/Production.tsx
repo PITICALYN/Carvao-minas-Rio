@@ -11,6 +11,7 @@ export const Production = () => {
     // Form State
     const [supplierId, setSupplierId] = useState('');
     const [inputWeight, setInputWeight] = useState('');
+    const [maxStock, setMaxStock] = useState<number>(0); // Track max available stock
     const [outputs, setOutputs] = useState<{ type: ProductType; qty: string }[]>([
         { type: '3kg', qty: '' },
         { type: '5kg', qty: '' },
@@ -50,6 +51,17 @@ export const Production = () => {
         if (!supplierId || !inputWeight) return;
 
         const input = parseFloat(inputWeight);
+
+        // Validation 1: Input cannot exceed available stock (if checking against stock)
+        // We allow a small margin of error or manual override if needed? 
+        // The user said "avisar que nao tenho a quantidade em estoque".
+        // Let's enforce it strictly for now or just warn? User said "avisar" (warn) but usually implies blocking.
+        // Let's block if input > maxStock (with a small epsilon for float issues)
+        if (input > maxStock + 0.1) {
+            alert(`Erro: A entrada informada (${input}kg) é maior que o estoque disponível para este fornecedor (${maxStock.toFixed(2)}kg).`);
+            return;
+        }
+
         let totalOutputKg = 0;
         const finalOutputs = outputs.map(o => {
             const qty = parseFloat(o.qty) || 0;
@@ -61,6 +73,12 @@ export const Production = () => {
             totalOutputKg += qty * weight;
             return { productType: o.type, quantity: qty };
         }).filter(o => o.quantity > 0);
+
+        // Validation 2: Output cannot exceed Input (Physical impossibility)
+        if (totalOutputKg > input) {
+            alert(`Erro: O peso total de saída (${totalOutputKg}kg) não pode ser maior que a entrada (${input}kg). Verifique as quantidades.`);
+            return;
+        }
 
         const loss = ((input - totalOutputKg) / input) * 100;
 
@@ -85,6 +103,7 @@ export const Production = () => {
         setCurrentBatchId(null);
         setSupplierId('');
         setInputWeight('');
+        setMaxStock(0);
         setOutputs([
             { type: '3kg', qty: '' },
             { type: '5kg', qty: '' },
@@ -96,6 +115,27 @@ export const Production = () => {
         setCurrentBatchId(batch.id);
         setSupplierId(batch.supplierId);
         setInputWeight(batch.inputWeightKg.toString());
+        // For edit, we assume the stock was valid at the time, but we should probably recalculate maxStock 
+        // including the current batch's input (add it back) to allow editing.
+        // For simplicity in this MVP, we might skip strict stock check on edit or re-calc.
+        // Let's re-calc maxStock adding back this batch's input.
+
+        const { purchaseOrders, productionBatches } = useAppStore.getState();
+        const totalReceived = purchaseOrders
+            .filter(po => po.supplierId === batch.supplierId && po.status === 'Received')
+            .reduce((acc, po) => {
+                const rawMaterialItems = po.items.filter(item =>
+                    ['Charcoal_Bulk', 'Eucalyptus', 'Pinus'].includes(item.materialType)
+                );
+                return acc + rawMaterialItems.reduce((sum, item) => sum + item.quantity, 0);
+            }, 0);
+
+        const totalConsumedOtherBatches = productionBatches
+            .filter(b => b.supplierId === batch.supplierId && b.id !== batch.id)
+            .reduce((acc, b) => acc + b.inputWeightKg, 0);
+
+        const available = Math.max(0, totalReceived - totalConsumedOtherBatches);
+        setMaxStock(available);
 
         const newOutputs = [
             { type: '3kg', qty: '' },
@@ -116,6 +156,7 @@ export const Production = () => {
         setCurrentBatchId(null);
         setSupplierId('');
         setInputWeight('');
+        setMaxStock(0);
         setOutputs([
             { type: '3kg', qty: '' },
             { type: '5kg', qty: '' },
@@ -236,33 +277,33 @@ export const Production = () => {
                                             const newSupplierId = e.target.value;
                                             setSupplierId(newSupplierId);
 
-                                            // Auto-fill Input Weight based on available stock
                                             if (newSupplierId) {
                                                 const { purchaseOrders, productionBatches } = useAppStore.getState();
 
-                                                // 1. Calculate Total Received from POs
                                                 const totalReceived = purchaseOrders
                                                     .filter(po => po.supplierId === newSupplierId && po.status === 'Received')
                                                     .reduce((acc, po) => {
-                                                        // Sum up relevant raw material items (Charcoal_Bulk, Eucalyptus, Pinus)
                                                         const rawMaterialItems = po.items.filter(item =>
                                                             ['Charcoal_Bulk', 'Eucalyptus', 'Pinus'].includes(item.materialType)
                                                         );
                                                         return acc + rawMaterialItems.reduce((sum, item) => sum + item.quantity, 0);
                                                     }, 0);
 
-                                                // 2. Calculate Total Consumed by Production
                                                 const totalConsumed = productionBatches
                                                     .filter(batch => batch.supplierId === newSupplierId)
                                                     .reduce((acc, batch) => acc + batch.inputWeightKg, 0);
 
                                                 const availableStock = Math.max(0, totalReceived - totalConsumed);
+                                                setMaxStock(availableStock);
 
                                                 if (availableStock > 0) {
                                                     setInputWeight(availableStock.toString());
+                                                } else {
+                                                    setInputWeight('');
                                                 }
                                             } else {
                                                 setInputWeight('');
+                                                setMaxStock(0);
                                             }
                                         }}
                                         className="w-full input-field px-4 py-2"
@@ -288,8 +329,8 @@ export const Production = () => {
                                         <Scale className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                                     </div>
                                     {supplierId && (
-                                        <p className="text-xs text-slate-500 mt-1">
-                                            *Preenchido automaticamente com o saldo de estoque calculado.
+                                        <p className={`text-xs mt-1 ${parseFloat(inputWeight) > maxStock ? 'text-red-400 font-bold' : 'text-slate-500'}`}>
+                                            Disponível: {maxStock.toFixed(2)} kg
                                         </p>
                                     )}
                                 </div>
