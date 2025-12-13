@@ -65,6 +65,8 @@ export const Production = () => {
         let totalOutputKg = 0;
         const finalOutputs = outputs.map(o => {
             const qty = parseFloat(o.qty) || 0;
+            if (qty < 0) return null; // Should not happen with UI block, but safety check
+
             let weight = 0;
             if (o.type === '3kg') weight = 3;
             if (o.type === '5kg') weight = 5;
@@ -72,7 +74,7 @@ export const Production = () => {
 
             totalOutputKg += qty * weight;
             return { productType: o.type, quantity: qty };
-        }).filter(o => o.quantity > 0);
+        }).filter((o): o is { productType: ProductType; quantity: number } => o !== null && o.quantity > 0);
 
         // Validation 2: Output cannot exceed Input (Physical impossibility)
         if (totalOutputKg > input) {
@@ -320,8 +322,12 @@ export const Production = () => {
                                     <div className="relative">
                                         <input
                                             type="number"
+                                            min="0"
                                             value={inputWeight}
-                                            onChange={(e) => setInputWeight(e.target.value)}
+                                            onChange={(e) => {
+                                                if (parseFloat(e.target.value) < 0) return;
+                                                setInputWeight(e.target.value);
+                                            }}
                                             className="w-full input-field px-4 py-2 pl-10"
                                             placeholder="0.00"
                                             required
@@ -418,10 +424,14 @@ export const Production = () => {
                                             <span className="w-24 text-sm font-medium text-slate-300">{out.type}</span>
                                             <input
                                                 type="number"
+                                                min="0"
                                                 value={out.qty}
                                                 onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    if (parseFloat(val) < 0) return; // Block negative
+
                                                     const newOutputs = [...outputs];
-                                                    newOutputs[idx].qty = e.target.value;
+                                                    newOutputs[idx].qty = val;
                                                     setOutputs(newOutputs);
                                                 }}
                                                 className="flex-1 input-field px-4 py-2"
