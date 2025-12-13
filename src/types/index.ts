@@ -168,7 +168,7 @@ export interface Shipment {
 
 // --- Advanced Control: Audit Log ---
 export type AuditAction = 'Login' | 'Create' | 'Update' | 'Delete' | 'Approve' | 'Reject';
-export type AuditResource = 'User' | 'Product' | 'Stock' | 'Sale' | 'Purchase' | 'Financial';
+export type AuditResource = 'User' | 'Product' | 'Stock' | 'Sale' | 'Purchase' | 'Financial' | 'Supplier';
 
 export interface AuditLog {
     id: string;
