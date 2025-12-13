@@ -69,6 +69,19 @@ export const Layout = () => {
         }
     };
 
+    // Helper to check permissions with fallback for legacy Admin users
+    const hasPermission = (permission: string) => {
+        if (!currentUser) return false;
+        // If user has permissions array, use it
+        if (currentUser.permissions && currentUser.permissions.length > 0) {
+            return currentUser.permissions.includes(permission);
+        }
+        // Fallback: If no permissions array but role is Admin, allow everything
+        if (currentUser.role === 'Admin') return true;
+
+        return false;
+    };
+
     return (
         <div className="flex h-screen overflow-hidden">
             {/* Sidebar */}
@@ -79,12 +92,12 @@ export const Layout = () => {
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-                    {currentUser?.permissions?.includes('view_dashboard') && (
+                    {hasPermission('view_dashboard') && (
                         <NavItem to="/" icon={LayoutDashboard} label="Dashboard" />
                     )}
 
                     {/* Commercial & Sales */}
-                    {(currentUser?.permissions?.includes('view_sales') || currentUser?.permissions?.includes('manage_sales')) && (
+                    {(hasPermission('view_sales') || hasPermission('manage_sales')) && (
                         <>
                             <NavItem to="/comercial" icon={Users} label="Comercial" />
                             <NavItem to="/vendas" icon={ShoppingCart} label="Vendas" />
@@ -92,7 +105,7 @@ export const Layout = () => {
                     )}
 
                     {/* Purchasing */}
-                    {currentUser?.permissions?.includes('manage_inventory') && ( // Assuming purchasing falls under inventory/admin for now or add specific perm
+                    {hasPermission('manage_inventory') && ( // Assuming purchasing falls under inventory/admin for now or add specific perm
                         <>
                             <NavItem to="/compras" icon={ShoppingBag} label="Compras" />
                             <NavItem to="/suppliers" icon={User} label="Fornecedores" />
@@ -100,7 +113,7 @@ export const Layout = () => {
                     )}
 
                     {/* Inventory & Shipping */}
-                    {currentUser?.permissions?.includes('view_inventory') && (
+                    {hasPermission('view_inventory') && (
                         <>
                             <NavItem to="/estoque" icon={Package} label="Estoque" />
                             <NavItem to="/expedicao" icon={Truck} label="Expedição" />
@@ -108,12 +121,12 @@ export const Layout = () => {
                     )}
 
                     {/* Production */}
-                    {currentUser?.permissions?.includes('view_production') && (
+                    {hasPermission('view_production') && (
                         <NavItem to="/production" icon={Factory} label="Produção" />
                     )}
 
                     {/* Financial */}
-                    {currentUser?.permissions?.includes('view_financial') && (
+                    {hasPermission('view_financial') && (
                         <>
                             <NavItem to="/financeiro" icon={DollarSign} label="Financeiro" />
                             <NavItem to="/dre" icon={FileText} label="DRE Gerencial" />
@@ -122,13 +135,13 @@ export const Layout = () => {
                     )}
 
                     <div className="pt-4 mt-4 border-t border-white/10">
-                        {currentUser?.permissions?.includes('view_users') && (
+                        {hasPermission('view_users') && (
                             <NavItem to="/usuarios" icon={User} label="Usuários" />
                         )}
-                        {currentUser?.permissions?.includes('view_audit') && (
+                        {hasPermission('view_audit') && (
                             <NavItem to="/auditoria" icon={Shield} label="Auditoria" />
                         )}
-                        {currentUser?.permissions?.includes('manage_settings') && (
+                        {hasPermission('manage_settings') && (
                             <NavItem to="/configuracoes" icon={Settings} label="Configurações" />
                         )}
                     </div>
