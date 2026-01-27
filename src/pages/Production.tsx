@@ -2,24 +2,36 @@ import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType } from '../types';
 import { Plus, Scale, Edit, Trash2 } from 'lucide-react';
+import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Production = () => {
-    const { suppliers, productionBatches, addProductionBatch, updateProductionBatch, removeProductionBatch, currentUser } = useAppStore();
+    const { suppliers, productionBatches, addProductionBatch, updateProductionBatch, removeProductionBatch } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentBatchId, setCurrentBatchId] = useState<string | null>(null);
 
+    // Admin Auth State
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<'Edit' | 'Delete' | null>(null);
+    const [batchToActOn, setBatchToActOn] = useState<any | null>(null);
+
     // Form State
-    const [supplierId, setSupplierId] = useState('');
-    const [inputWeight, setInputWeight] = useState('');
-    const [maxStock, setMaxStock] = useState<number>(0); // Track max available stock
+    // We now use an array of inputs for blending
+    const [inputs, setInputs] = useState<{ supplierId: string; weight: string; maxStock: number }[]>([
+        { supplierId: '', weight: '', maxStock: 0 }
+    ]);
+
     const [outputs, setOutputs] = useState<{ type: ProductType; qty: string }[]>([
         { type: '3kg', qty: '' },
         { type: '5kg', qty: '' },
         { type: 'Paulistao', qty: '' },
     ]);
 
+    const getTotalInputWeight = () => {
+        return inputs.reduce((sum, input) => sum + (parseFloat(input.weight) || 0), 0);
+    };
+
     const calculateLoss = () => {
-        const input = parseFloat(inputWeight) || 0;
+        const input = getTotalInputWeight();
         if (input === 0) return 0;
 
         let totalOutputKg = 0;
@@ -27,45 +39,106 @@ export const Production = () => {
             const qty = parseFloat(out.qty) || 0;
             if (out.type === '3kg') totalOutputKg += qty * 3;
             if (out.type === '5kg') totalOutputKg += qty * 5;
-            if (out.type === 'Paulistao') totalOutputKg += qty * 10; // Assuming Paulistao is 10kg? Or maybe standard bag. Let's assume 4kg for now or ask user? 
-            // Prompt says "3kg, 5kg e Paulistao". Paulistao usually is big, maybe 10kg or just a brand name for a standard size.
-            // Let's assume Paulistao is 4kg for now based on common sizes, but I should probably make this configurable or ask.
-            // Actually, let's assume Paulistao is a specific bag type.
-            // Wait, if I don't know the weight, the loss calc will be wrong.
-            // Let's assume Paulistao = 10kg for this prototype or maybe 2.5kg?
-            // "Paulistão" might be a brand of bag.
-            // Let's use 10kg as a placeholder and add a note.
-            // Actually, let's check the prompt again. "3kg, 5kg e Paulistao".
-            // Usually charcoal bags are 2kg, 3kg, 5kg, 10kg.
-            // I'll assume 10kg for Paulistao.
+            if (out.type === 'Paulistao') totalOutputKg += qty * 16;
         });
 
         // Loss = (Input - Output) / Input
         return ((input - totalOutputKg) / input) * 100;
     };
 
-    const PAULISTAO_WEIGHT = 16; // Updated to 16kg per user request
+    const PAULISTAO_WEIGHT = 16;
+
+    const getAvailableStock = (supplierId: string, excludeBatchId?: string | null) => {
+        if (!supplierId) return 0;
+        const { purchaseOrders, productionBatches } = useAppStore.getState();
+
+        const totalReceived = purchaseOrders
+            .filter(po => po.supplierId === supplierId && po.status === 'Received')
+            .reduce((acc, po) => {
+                const rawMaterialItems = po.items.filter(item =>
+                    ['Charcoal_Bulk', 'Eucalyptus', 'Pinus'].includes(item.materialType)
+                );
+                return acc + rawMaterialItems.reduce((sum, item) => sum + item.quantity, 0);
+            }, 0);
+
+        const totalConsumed = productionBatches
+            .filter(batch => batch.id !== excludeBatchId) // Exclude current batch if editing
+            .reduce((acc, batch) => {
+                // Check if batch has inputs (new format)
+                if (batch.inputs) {
+                    const input = batch.inputs.find(i => i.supplierId === supplierId);
+                    return acc + (input ? input.weightKg : 0);
+                }
+                // Fallback for old format
+                if (batch.supplierId === supplierId) {
+                    return acc + batch.inputWeightKg;
+                }
+                return acc;
+            }, 0);
+
+        return Math.max(0, totalReceived - totalConsumed);
+    };
+
+    const handleAddInput = () => {
+        setInputs([...inputs, { supplierId: '', weight: '', maxStock: 0 }]);
+    };
+
+    const handleRemoveInput = (index: number) => {
+        const newInputs = inputs.filter((_, i) => i !== index);
+        setInputs(newInputs);
+    };
+
+    const handleInputChange = (index: number, field: 'supplierId' | 'weight', value: string) => {
+        const newInputs = [...inputs];
+
+        if (field === 'supplierId') {
+            newInputs[index].supplierId = value;
+            // Recalculate max stock for this supplier
+            if (value) {
+                newInputs[index].maxStock = getAvailableStock(value, currentBatchId);
+                // Auto-fill weight if it's the first input and empty (UX convenience)
+                if (newInputs[index].maxStock > 0 && !newInputs[index].weight && inputs.length === 1 && !currentBatchId) {
+                    newInputs[index].weight = newInputs[index].maxStock.toString();
+                }
+            } else {
+                newInputs[index].maxStock = 0;
+                newInputs[index].weight = '';
+            }
+        } else {
+            newInputs[index].weight = value;
+        }
+
+        setInputs(newInputs);
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!supplierId || !inputWeight) return;
 
-        const input = parseFloat(inputWeight);
-
-        // Validation 1: Input cannot exceed available stock (if checking against stock)
-        // We allow a small margin of error or manual override if needed? 
-        // The user said "avisar que nao tenho a quantidade em estoque".
-        // Let's enforce it strictly for now or just warn? User said "avisar" (warn) but usually implies blocking.
-        // Let's block if input > maxStock (with a small epsilon for float issues)
-        if (input > maxStock + 0.1) {
-            alert(`Erro: A entrada informada (${input}kg) é maior que o estoque disponível para este fornecedor (${maxStock.toFixed(2)}kg).`);
+        // Validate Inputs
+        const validInputs = inputs.filter(i => i.supplierId && parseFloat(i.weight) > 0);
+        if (validInputs.length === 0) {
+            alert('Adicione pelo menos uma entrada de matéria-prima válida.');
             return;
         }
+
+        // Check Stock for each input
+        for (const input of validInputs) {
+            const weight = parseFloat(input.weight);
+            // Re-check stock to be safe
+            const available = getAvailableStock(input.supplierId, currentBatchId);
+            if (weight > available + 0.1) {
+                const supplierName = suppliers.find(s => s.id === input.supplierId)?.name;
+                alert(`Erro: Estoque insuficiente para ${supplierName}. Disponível: ${available.toFixed(2)}kg.`);
+                return;
+            }
+        }
+
+        const totalInputKg = getTotalInputWeight();
 
         let totalOutputKg = 0;
         const finalOutputs = outputs.map(o => {
             const qty = parseFloat(o.qty) || 0;
-            if (qty < 0) return null; // Should not happen with UI block, but safety check
+            if (qty < 0) return null;
 
             let weight = 0;
             if (o.type === '3kg') weight = 3;
@@ -76,19 +149,18 @@ export const Production = () => {
             return { productType: o.type, quantity: qty };
         }).filter((o): o is { productType: ProductType; quantity: number } => o !== null && o.quantity > 0);
 
-        // Validation 2: Output cannot exceed Input (Physical impossibility)
-        if (totalOutputKg > input) {
-            alert(`Erro: O peso total de saída (${totalOutputKg}kg) não pode ser maior que a entrada (${input}kg). Verifique as quantidades.`);
+        if (totalOutputKg > totalInputKg) {
+            alert(`Erro: O peso total de saída (${totalOutputKg}kg) não pode ser maior que a entrada (${totalInputKg}kg).`);
             return;
         }
 
-        const loss = ((input - totalOutputKg) / input) * 100;
+        const loss = ((totalInputKg - totalOutputKg) / totalInputKg) * 100;
 
         const batchData = {
             id: currentBatchId || crypto.randomUUID(),
-            supplierId,
+            inputs: validInputs.map(i => ({ supplierId: i.supplierId, weightKg: parseFloat(i.weight) })),
             date: new Date().toISOString().split('T')[0],
-            inputWeightKg: input,
+            inputWeightKg: totalInputKg,
             outputs: finalOutputs,
             totalOutputWeightKg: totalOutputKg,
             lossPercentage: loss,
@@ -96,16 +168,14 @@ export const Production = () => {
         };
 
         if (currentBatchId) {
-            updateProductionBatch(batchData);
+            updateProductionBatch(batchData as any); // Type assertion needed until full migration
         } else {
-            addProductionBatch(batchData);
+            addProductionBatch(batchData as any);
         }
 
         setIsModalOpen(false);
         setCurrentBatchId(null);
-        setSupplierId('');
-        setInputWeight('');
-        setMaxStock(0);
+        setInputs([{ supplierId: '', weight: '', maxStock: 0 }]);
         setOutputs([
             { type: '3kg', qty: '' },
             { type: '5kg', qty: '' },
@@ -113,52 +183,68 @@ export const Production = () => {
         ]);
     };
 
-    const handleEdit = (batch: any) => {
-        setCurrentBatchId(batch.id);
-        setSupplierId(batch.supplierId);
-        setInputWeight(batch.inputWeightKg.toString());
-        // For edit, we assume the stock was valid at the time, but we should probably recalculate maxStock 
-        // including the current batch's input (add it back) to allow editing.
-        // For simplicity in this MVP, we might skip strict stock check on edit or re-calc.
-        // Let's re-calc maxStock adding back this batch's input.
+    // Auth Wrappers
+    const requestEdit = (batch: any) => {
+        setBatchToActOn(batch);
+        setPendingAction('Edit');
+        setAuthModalOpen(true);
+    };
 
-        const { purchaseOrders, productionBatches } = useAppStore.getState();
-        const totalReceived = purchaseOrders
-            .filter(po => po.supplierId === batch.supplierId && po.status === 'Received')
-            .reduce((acc, po) => {
-                const rawMaterialItems = po.items.filter(item =>
-                    ['Charcoal_Bulk', 'Eucalyptus', 'Pinus'].includes(item.materialType)
-                );
-                return acc + rawMaterialItems.reduce((sum, item) => sum + item.quantity, 0);
-            }, 0);
+    const requestDelete = (batch: any) => {
+        setBatchToActOn(batch);
+        setPendingAction('Delete');
+        setAuthModalOpen(true);
+    };
 
-        const totalConsumedOtherBatches = productionBatches
-            .filter(b => b.supplierId === batch.supplierId && b.id !== batch.id)
-            .reduce((acc, b) => acc + b.inputWeightKg, 0);
+    const confirmAction = () => {
+        if (!batchToActOn || !pendingAction) return;
 
-        const available = Math.max(0, totalReceived - totalConsumedOtherBatches);
-        setMaxStock(available);
+        if (pendingAction === 'Edit') {
+            const batch = batchToActOn;
+            setCurrentBatchId(batch.id);
 
-        const newOutputs = [
-            { type: '3kg', qty: '' },
-            { type: '5kg', qty: '' },
-            { type: 'Paulistao', qty: '' },
-        ] as { type: ProductType; qty: string }[];
+            // Populate Inputs
+            if (batch.inputs && batch.inputs.length > 0) {
+                const editInputs = batch.inputs.map((i: any) => ({
+                    supplierId: i.supplierId,
+                    weight: i.weightKg.toString(),
+                    maxStock: getAvailableStock(i.supplierId, batch.id) // This will exclude current batch usage correctly
+                }));
+                setInputs(editInputs);
+            } else {
+                // Legacy support
+                setInputs([{
+                    supplierId: batch.supplierId,
+                    weight: batch.inputWeightKg.toString(),
+                    maxStock: getAvailableStock(batch.supplierId, batch.id)
+                }]);
+            }
 
-        batch.outputs.forEach((o: any) => {
-            const idx = newOutputs.findIndex(no => no.type === o.productType);
-            if (idx >= 0) newOutputs[idx].qty = o.quantity.toString();
-        });
+            const newOutputs = [
+                { type: '3kg', qty: '' },
+                { type: '5kg', qty: '' },
+                { type: 'Paulistao', qty: '' },
+            ] as { type: ProductType; qty: string }[];
 
-        setOutputs(newOutputs);
-        setIsModalOpen(true);
+            batch.outputs.forEach((o: any) => {
+                const idx = newOutputs.findIndex(no => no.type === o.productType);
+                if (idx >= 0) newOutputs[idx].qty = o.quantity.toString();
+            });
+
+            setOutputs(newOutputs);
+            setIsModalOpen(true);
+        } else if (pendingAction === 'Delete') {
+            removeProductionBatch(batchToActOn.id);
+        }
+
+        setAuthModalOpen(false);
+        setPendingAction(null);
+        setBatchToActOn(null);
     };
 
     const handleNew = () => {
         setCurrentBatchId(null);
-        setSupplierId('');
-        setInputWeight('');
-        setMaxStock(0);
+        setInputs([{ supplierId: '', weight: '', maxStock: 0 }]);
         setOutputs([
             { type: '3kg', qty: '' },
             { type: '5kg', qty: '' },
@@ -169,6 +255,13 @@ export const Production = () => {
 
     return (
         <div className="space-y-6">
+            <AdminAuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                onConfirm={confirmAction}
+                actionType={pendingAction || 'Edit'}
+            />
+
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-white">Produção</h2>
@@ -188,8 +281,8 @@ export const Production = () => {
                     <thead className="bg-white/5 border-b border-white/10">
                         <tr>
                             <th className="px-6 py-4 text-sm font-semibold text-slate-300">Data</th>
-                            <th className="px-6 py-4 text-sm font-semibold text-slate-300">Fornecedor</th>
-                            <th className="px-6 py-4 text-sm font-semibold text-slate-300">Entrada (kg)</th>
+                            <th className="px-6 py-4 text-sm font-semibold text-slate-300">Fornecedores (Entrada)</th>
+                            <th className="px-6 py-4 text-sm font-semibold text-slate-300">Total Entrada</th>
                             <th className="px-6 py-4 text-sm font-semibold text-slate-300">Saída (Sacos)</th>
                             <th className="px-6 py-4 text-sm font-semibold text-slate-300">Perda</th>
                             <th className="px-6 py-4 text-sm font-semibold text-slate-300">Ações</th>
@@ -197,16 +290,27 @@ export const Production = () => {
                     </thead>
                     <tbody className="divide-y divide-white/5">
                         {productionBatches.map((batch) => {
-                            const supplier = suppliers.find(s => s.id === batch.supplierId);
+                            // Helper to display suppliers
+                            const batchInputs = (batch as any).inputs || (batch.supplierId ? [{ supplierId: batch.supplierId, weightKg: batch.inputWeightKg }] : []);
+
                             return (
                                 <tr key={batch.id} className="hover:bg-white/5 transition-colors">
                                     <td className="px-6 py-4 text-sm text-slate-400">
                                         {new Date(batch.timestamp).toLocaleDateString()}
                                     </td>
-                                    <td className="px-6 py-4 text-sm font-medium text-white">
-                                        {supplier?.name || 'Desconhecido'}
-                                    </td>
                                     <td className="px-6 py-4 text-sm text-slate-400">
+                                        <div className="flex flex-col gap-1">
+                                            {batchInputs.map((input: any, idx: number) => {
+                                                const s = suppliers.find(sup => sup.id === input.supplierId);
+                                                return (
+                                                    <span key={idx} className="text-xs">
+                                                        {s?.name || 'Unknown'}: {input.weightKg}kg
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm font-medium text-white">
                                         {batch.inputWeightKg} kg
                                     </td>
                                     <td className="px-6 py-4 text-sm text-slate-400">
@@ -225,35 +329,30 @@ export const Production = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        {currentUser?.role === 'Admin' && (
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => handleEdit(batch)}
-                                                    className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
-                                                    title="Editar Produção"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        if (confirm('Tem certeza que deseja excluir esta produção? O estoque será revertido.')) {
-                                                            removeProductionBatch(batch.id);
-                                                        }
-                                                    }}
-                                                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                    title="Excluir Produção"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        )}
+                                        {/* Allow Edit/Delete for everyone but protected by password */}
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => requestEdit(batch)}
+                                                className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                title="Editar Produção"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => requestDelete(batch)}
+                                                className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                title="Excluir Produção"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             );
                         })}
                         {productionBatches.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                                <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                                     Nenhuma produção registrada.
                                 </td>
                             </tr>
@@ -269,151 +368,71 @@ export const Production = () => {
                         <h3 className="text-xl font-bold mb-4 text-white">Nova Produção</h3>
                         <form onSubmit={handleSubmit} className="space-y-6">
 
-                            {/* Supplier & Input */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Fornecedor</label>
-                                    <select
-                                        value={supplierId}
-                                        onChange={(e) => {
-                                            const newSupplierId = e.target.value;
-                                            setSupplierId(newSupplierId);
-
-                                            if (newSupplierId) {
-                                                const { purchaseOrders, productionBatches } = useAppStore.getState();
-
-                                                const totalReceived = purchaseOrders
-                                                    .filter(po => po.supplierId === newSupplierId && po.status === 'Received')
-                                                    .reduce((acc, po) => {
-                                                        const rawMaterialItems = po.items.filter(item =>
-                                                            ['Charcoal_Bulk', 'Eucalyptus', 'Pinus'].includes(item.materialType)
-                                                        );
-                                                        return acc + rawMaterialItems.reduce((sum, item) => sum + item.quantity, 0);
-                                                    }, 0);
-
-                                                const totalConsumed = productionBatches
-                                                    .filter(batch => batch.supplierId === newSupplierId)
-                                                    .reduce((acc, batch) => acc + batch.inputWeightKg, 0);
-
-                                                const availableStock = Math.max(0, totalReceived - totalConsumed);
-                                                setMaxStock(availableStock);
-
-                                                if (availableStock > 0) {
-                                                    setInputWeight(availableStock.toString());
-                                                } else {
-                                                    setInputWeight('');
-                                                }
-                                            } else {
-                                                setInputWeight('');
-                                                setMaxStock(0);
-                                            }
-                                        }}
-                                        className="w-full input-field px-4 py-2"
-                                        required
-                                    >
-                                        <option value="">Selecione...</option>
-                                        {suppliers.map(s => (
-                                            <option key={s.id} value={s.id}>{s.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Entrada (kg)</label>
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={inputWeight}
-                                            onChange={(e) => {
-                                                if (parseFloat(e.target.value) < 0) return;
-                                                setInputWeight(e.target.value);
-                                            }}
-                                            className={`w-full input-field px-4 py-2 pl-10 ${maxStock <= 0 && !currentBatchId ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            placeholder="0.00"
-                                            required
-                                            disabled={maxStock <= 0 && !currentBatchId}
-                                        />
-                                        <Scale className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                                    </div>
-                                    {supplierId && (
-                                        <div className="mt-2">
-                                            <p className={`text-xs ${parseFloat(inputWeight) > maxStock ? 'text-red-400 font-bold' : 'text-slate-500'}`}>
-                                                Disponível: {maxStock.toFixed(2)} kg
-                                                {maxStock <= 0 && !currentBatchId && <span className="text-red-400 font-bold ml-2">(Sem estoque disponível)</span>}
-                                            </p>
-
-                                            {/* Optimization Suggestion */}
-                                            {parseFloat(inputWeight) > 0 && (
-                                                <div className="mt-3 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <p className="text-xs font-bold text-blue-400 mb-1">💡 Sugestão de Melhor Aproveitamento</p>
-                                                            <p className="text-xs text-slate-300">
-                                                                {(() => {
-                                                                    const total = parseFloat(inputWeight);
-                                                                    // Simple solver to minimize remainder
-                                                                    // Weights: 16 (Paulistao), 5, 3
-                                                                    let best = { p: 0, f: 0, t: 0, remainder: total };
-
-                                                                    // Try to maximize large bags first (heuristic)
-                                                                    const maxP = Math.floor(total / PAULISTAO_WEIGHT);
-
-                                                                    for (let p = maxP; p >= 0; p--) {
-                                                                        const remP = total - (p * PAULISTAO_WEIGHT);
-                                                                        const maxF = Math.floor(remP / 5);
-
-                                                                        for (let f = maxF; f >= 0; f--) {
-                                                                            const remF = remP - (f * 5);
-                                                                            const t = Math.floor(remF / 3);
-                                                                            const remainder = remF - (t * 3);
-
-                                                                            if (remainder < best.remainder) {
-                                                                                best = { p, f, t, remainder };
-                                                                            }
-                                                                            if (remainder === 0) break;
-                                                                        }
-                                                                        if (best.remainder === 0) break;
-                                                                    }
-
-                                                                    return (
-                                                                        <>
-                                                                            <span>
-                                                                                {best.p > 0 && `${best.p}x Paulistão, `}
-                                                                                {best.f > 0 && `${best.f}x 5kg, `}
-                                                                                {best.t > 0 && `${best.t}x 3kg`}
-                                                                                {best.p === 0 && best.f === 0 && best.t === 0 && "Nenhuma combinação eficiente."}
-                                                                            </span>
-                                                                            {best.remainder === 0 ? (
-                                                                                <span className="text-emerald-400 ml-1">(0% desperdício)</span>
-                                                                            ) : (
-                                                                                <span className="text-amber-400 ml-1">(Sobra: {best.remainder.toFixed(1)}kg)</span>
-                                                                            )}
-
-                                                                            {(best.p > 0 || best.f > 0 || best.t > 0) && (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => {
-                                                                                        const newOutputs = [...outputs];
-                                                                                        newOutputs.find(o => o.type === 'Paulistao')!.qty = best.p.toString();
-                                                                                        newOutputs.find(o => o.type === '5kg')!.qty = best.f.toString();
-                                                                                        newOutputs.find(o => o.type === '3kg')!.qty = best.t.toString();
-                                                                                        setOutputs(newOutputs);
-                                                                                    }}
-                                                                                    className="block mt-2 text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded transition-colors"
-                                                                                >
-                                                                                    Aplicar Sugestão
-                                                                                </button>
-                                                                            )}
-                                                                        </>
-                                                                    );
-                                                                })()}
-                                                            </p>
-                                                        </div>
+                            {/* Inputs Section */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">Entrada de Matéria-Prima (Mistura)</label>
+                                <div className="space-y-3">
+                                    {inputs.map((input, idx) => (
+                                        <div key={idx} className="p-3 bg-white/5 rounded-xl border border-white/5 relative">
+                                            {inputs.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveInput(idx)}
+                                                    className="absolute top-2 right-2 text-slate-500 hover:text-red-400"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="text-xs text-slate-400 mb-1 block">Fornecedor</label>
+                                                    <select
+                                                        value={input.supplierId}
+                                                        onChange={(e) => handleInputChange(idx, 'supplierId', e.target.value)}
+                                                        className="w-full input-field px-3 py-2 text-sm"
+                                                        required
+                                                    >
+                                                        <option value="">Selecione...</option>
+                                                        {suppliers.map(s => (
+                                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-slate-400 mb-1 block">Peso (kg)</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={input.weight}
+                                                            onChange={(e) => handleInputChange(idx, 'weight', e.target.value)}
+                                                            className={`w-full input-field px-3 py-2 pl-9 text-sm ${input.maxStock <= 0 ? 'border-red-500/50' : ''}`}
+                                                            placeholder="0.00"
+                                                            required
+                                                        />
+                                                        <Scale className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
                                                     </div>
+                                                </div>
+                                            </div>
+                                            {input.supplierId && (
+                                                <div className="mt-2 text-xs">
+                                                    <span className={parseFloat(input.weight) > input.maxStock ? 'text-red-400 font-bold' : 'text-slate-500'}>
+                                                        Disponível: {input.maxStock.toFixed(2)} kg
+                                                    </span>
                                                 </div>
                                             )}
                                         </div>
-                                    )}
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={handleAddInput}
+                                        className="text-sm text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
+                                    >
+                                        <Plus className="w-4 h-4" /> Adicionar Outro Fornecedor
+                                    </button>
+                                </div>
+                                <div className="mt-2 text-right">
+                                    <p className="text-sm text-slate-300">Total Entrada: <span className="font-bold text-white">{getTotalInputWeight().toFixed(2)} kg</span></p>
                                 </div>
                             </div>
 
@@ -430,15 +449,14 @@ export const Production = () => {
                                                 value={out.qty}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
-                                                    if (parseFloat(val) < 0) return; // Block negative
+                                                    if (parseFloat(val) < 0) return;
 
                                                     const newOutputs = [...outputs];
                                                     newOutputs[idx].qty = val;
                                                     setOutputs(newOutputs);
                                                 }}
-                                                className={`flex-1 input-field px-4 py-2 ${(!inputWeight || parseFloat(inputWeight) <= 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                className="flex-1 input-field px-4 py-2"
                                                 placeholder="Qtd Sacos"
-                                                disabled={!inputWeight || parseFloat(inputWeight) <= 0}
                                             />
                                         </div>
                                     ))}
@@ -454,7 +472,7 @@ export const Production = () => {
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xs text-emerald-400">Peso Entrada: {inputWeight || 0} kg</p>
+                                    <p className="text-xs text-emerald-400">Peso Entrada: {getTotalInputWeight().toFixed(2)} kg</p>
                                 </div>
                             </div>
 

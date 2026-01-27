@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Search, TrendingUp, DollarSign, Calendar, ArrowUpRight, ArrowDownLeft, Printer } from 'lucide-react';
+import { Plus, Search, TrendingUp, DollarSign, Calendar, ArrowUpRight, ArrowDownLeft, Printer, Edit, Trash2 } from 'lucide-react';
 import { type FinancialTransaction, type TransactionCategory } from '../types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Financeiro = () => {
-    const { transactions, addTransaction } = useAppStore();
+    const { transactions, addTransaction, updateTransaction, removeTransaction } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [filterType, setFilterType] = useState<'all' | 'Income' | 'Expense'>('all');
+
+    // Admin Auth State
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<'Edit' | 'Delete' | null>(null);
+    const [transactionToActOn, setTransactionToActOn] = useState<FinancialTransaction | null>(null);
 
     // Form State
     const [newTransaction, setNewTransaction] = useState<Partial<FinancialTransaction>>({
@@ -25,8 +31,8 @@ export const Financeiro = () => {
         e.preventDefault();
         if (!newTransaction.description || !newTransaction.amount) return;
 
-        addTransaction({
-            id: crypto.randomUUID(),
+        const transactionData = {
+            id: newTransaction.id || crypto.randomUUID(),
             date: newTransaction.date || new Date().toISOString(),
             dueDate: newTransaction.dueDate || new Date().toISOString(),
             type: newTransaction.type || 'Expense',
@@ -36,7 +42,13 @@ export const Financeiro = () => {
             status: newTransaction.status || 'Pending',
             entityName: newTransaction.entityName || '',
             entityId: newTransaction.entityId
-        } as FinancialTransaction);
+        } as FinancialTransaction;
+
+        if (newTransaction.id) {
+            updateTransaction(transactionData);
+        } else {
+            addTransaction(transactionData);
+        }
 
         setIsModalOpen(false);
         setNewTransaction({
@@ -49,6 +61,34 @@ export const Financeiro = () => {
             status: 'Pending',
             entityName: ''
         });
+    };
+
+    // Auth Wrappers
+    const requestEdit = (transaction: FinancialTransaction) => {
+        setTransactionToActOn(transaction);
+        setPendingAction('Edit');
+        setAuthModalOpen(true);
+    };
+
+    const requestDelete = (transaction: FinancialTransaction) => {
+        setTransactionToActOn(transaction);
+        setPendingAction('Delete');
+        setAuthModalOpen(true);
+    };
+
+    const confirmAction = () => {
+        if (!transactionToActOn || !pendingAction) return;
+
+        if (pendingAction === 'Edit') {
+            setNewTransaction(transactionToActOn);
+            setIsModalOpen(true);
+        } else if (pendingAction === 'Delete') {
+            removeTransaction(transactionToActOn.id);
+        }
+
+        setAuthModalOpen(false);
+        setPendingAction(null);
+        setTransactionToActOn(null);
     };
 
     const filteredTransactions = transactions.filter(t => filterType === 'all' || t.type === filterType);
@@ -95,6 +135,13 @@ export const Financeiro = () => {
 
     return (
         <div className="space-y-6">
+            <AdminAuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                onConfirm={confirmAction}
+                actionType={pendingAction || 'Edit'}
+            />
+
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-white">Financeiro</h1>
                 <div className="flex gap-3">
@@ -108,7 +155,19 @@ export const Financeiro = () => {
                         </button>
                     )}
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => {
+                            setNewTransaction({
+                                date: new Date().toISOString().split('T')[0],
+                                dueDate: new Date().toISOString().split('T')[0],
+                                type: 'Expense',
+                                category: 'Operational',
+                                description: '',
+                                amount: 0,
+                                status: 'Pending',
+                                entityName: ''
+                            });
+                            setIsModalOpen(true);
+                        }}
                         className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg"
                     >
                         <Plus className="w-4 h-4" />
@@ -230,7 +289,7 @@ export const Financeiro = () => {
 
             <div className="space-y-3">
                 {filteredTransactions.map(transaction => (
-                    <div key={transaction.id} className="glass-card p-4 rounded-xl flex items-center justify-between hover:bg-white/5 transition-colors">
+                    <div key={transaction.id} className="glass-card p-4 rounded-xl flex items-center justify-between hover:bg-white/5 transition-colors group">
                         <div className="flex items-center gap-4">
                             <div className={`p-3 rounded-full ${transaction.type === 'Income' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
                                 {transaction.type === 'Income' ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
@@ -251,16 +310,34 @@ export const Financeiro = () => {
                             </div>
                         </div>
 
-                        <div className="text-right">
-                            <p className={`font-bold text-lg ${transaction.type === 'Income' ? 'text-green-400' : 'text-red-400'}`}>
-                                {transaction.type === 'Income' ? '+' : '-'} R$ {transaction.amount.toLocaleString()}
-                            </p>
-                            <span className={`text-xs px-2 py-0.5 rounded-full border ${transaction.status === 'Paid' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                                transaction.status === 'Pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                                    'bg-red-500/10 text-red-400 border-red-500/20'
-                                }`}>
-                                {transaction.status === 'Paid' ? 'Pago/Recebido' : transaction.status === 'Pending' ? 'Pendente' : 'Atrasado'}
-                            </span>
+                        <div className="flex items-center gap-4">
+                            <div className="text-right">
+                                <p className={`font-bold text-lg ${transaction.type === 'Income' ? 'text-green-400' : 'text-red-400'}`}>
+                                    {transaction.type === 'Income' ? '+' : '-'} R$ {transaction.amount.toLocaleString()}
+                                </p>
+                                <span className={`text-xs px-2 py-0.5 rounded-full border ${transaction.status === 'Paid' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                                    transaction.status === 'Pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                        'bg-red-500/10 text-red-400 border-red-500/20'
+                                    }`}>
+                                    {transaction.status === 'Paid' ? 'Pago/Recebido' : transaction.status === 'Pending' ? 'Pendente' : 'Atrasado'}
+                                </span>
+                            </div>
+                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={() => requestEdit(transaction)}
+                                    className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                    title="Editar"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => requestDelete(transaction)}
+                                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                    title="Excluir"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}

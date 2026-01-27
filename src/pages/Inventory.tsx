@@ -18,9 +18,14 @@ export const Inventory = () => {
         const qty = parseInt(transferQty);
         if (!qty || qty <= 0) return;
 
-        transferStock(transferFrom, transferTo, transferType, Number(transferQty));
-        setIsTransferModalOpen(false);
-        setTransferQty('');
+        try {
+            transferStock(transferFrom, transferTo, transferType, Number(transferQty));
+            setIsTransferModalOpen(false);
+            setTransferQty('');
+            alert('Transferência realizada com sucesso!');
+        } catch (error: any) {
+            alert(error.message);
+        }
     };
 
     const InventoryCard = ({ location, items, color }: { location: string; items: Record<string, number>; color: string }) => (

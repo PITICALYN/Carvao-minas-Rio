@@ -54,6 +54,8 @@ interface AppState {
     // Financeiro
     transactions: FinancialTransaction[];
     addTransaction: (transaction: FinancialTransaction) => void;
+    updateTransaction: (transaction: FinancialTransaction) => void;
+    removeTransaction: (id: string) => void;
 
     // Expedição
     drivers: Driver[];
@@ -61,6 +63,7 @@ interface AppState {
     addDriver: (driver: Driver) => void;
     addShipment: (shipment: Shipment) => void;
     updateShipmentStatus: (id: string, status: 'Planned' | 'InTransit' | 'Delivered') => void;
+    receiveShipment: (id: string) => void; // New action to receive transfer
 
     // Audit Log
     auditLogs: AuditLog[];
@@ -228,13 +231,15 @@ export const useAppStore = create<AppState>()(
                     }
                 }
 
-                // Update inventory
+                // Check Stock Availability
                 const newInventory = { ...state.inventory };
-                sale.items.forEach(item => {
-                    if (newInventory[sale.location][item.productType] >= Number(item.quantity)) {
-                        newInventory[sale.location][item.productType] -= Number(item.quantity);
+                for (const item of sale.items) {
+                    const currentStock = newInventory[sale.location][item.productType];
+                    if (currentStock < Number(item.quantity)) {
+                        throw new Error(`Estoque insuficiente de ${item.productType} em ${sale.location === 'Factory' ? 'Fábrica' : 'Itaguaí'}. Disponível: ${currentStock}`);
                     }
-                });
+                    newInventory[sale.location][item.productType] -= Number(item.quantity);
+                }
 
                 // Log Action
                 state.logAction(
@@ -254,17 +259,42 @@ export const useAppStore = create<AppState>()(
 
             transferStock: (from, to, type, quantity) => set((state) => {
                 const newInventory = { ...state.inventory };
-                if (newInventory[from][type] >= quantity) {
-                    newInventory[from][type] -= quantity;
-                    newInventory[to][type] += quantity;
+                const currentStock = newInventory[from][type];
+
+                if (currentStock < quantity) {
+                    throw new Error(`Estoque insuficiente na origem! Disponível: ${currentStock}`);
                 }
+
+                newInventory[from][type] -= quantity;
+                newInventory[to][type] += quantity;
+
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Stock',
+                    `Transferred ${quantity} ${type} from ${from} to ${to}`,
+                    `${from}-${to}-${Date.now()}`
+                );
+
                 return { inventory: newInventory };
             }),
 
             getSupplierStats: (supplierId) => {
                 const state = get();
-                const batches = state.productionBatches.filter(b => b.supplierId === supplierId);
-                const totalInput = batches.reduce((acc, b) => acc + b.inputWeightKg, 0);
+                // Filter batches where this supplier is one of the inputs
+                const batches = state.productionBatches.filter(b =>
+                    b.inputs ? b.inputs.some(i => i.supplierId === supplierId) : b.supplierId === supplierId
+                );
+
+                const totalInput = batches.reduce((acc, b) => {
+                    if (b.inputs) {
+                        const input = b.inputs.find(i => i.supplierId === supplierId);
+                        return acc + (input ? input.weightKg : 0);
+                    }
+                    return acc + b.inputWeightKg;
+                }, 0);
+
                 const avgLoss = batches.length > 0
                     ? batches.reduce((acc, b) => acc + b.lossPercentage, 0) / batches.length
                     : 0;
@@ -362,25 +392,108 @@ export const useAppStore = create<AppState>()(
                 transactions: [...state.transactions, transaction]
             })),
 
+            updateTransaction: (updatedTransaction) => set((state) => {
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Financial',
+                    `Updated Transaction: ${updatedTransaction.description}`,
+                    updatedTransaction.id
+                );
+                return {
+                    transactions: state.transactions.map(t => t.id === updatedTransaction.id ? updatedTransaction : t)
+                };
+            }),
+
+            removeTransaction: (id) => set((state) => {
+                const transaction = state.transactions.find(t => t.id === id);
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Delete',
+                    'Financial',
+                    `Deleted Transaction: ${transaction?.description || id}`,
+                    id
+                );
+                return {
+                    transactions: state.transactions.filter(t => t.id !== id)
+                };
+            }),
+
             addDriver: (driver) => set((state) => ({
                 drivers: [...state.drivers, driver]
             })),
 
-            addShipment: (shipment) => set((state) => ({
-                shipments: [...state.shipments, shipment]
-            })),
+            addShipment: (shipment) => set((state) => {
+                const newInventory = { ...state.inventory };
+
+                // If it's a Transfer, deduct stock from Source immediately
+                if (shipment.type === 'Transfer' && shipment.sourceLocation && shipment.items) {
+                    for (const item of shipment.items) {
+                        const currentStock = newInventory[shipment.sourceLocation][item.productType];
+                        if (currentStock < item.quantity) {
+                            throw new Error(`Estoque insuficiente de ${item.productType} em ${shipment.sourceLocation}. Disponível: ${currentStock}`);
+                        }
+                        newInventory[shipment.sourceLocation][item.productType] -= item.quantity;
+                    }
+                }
+
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Create',
+                    'Stock', // Shipment is stock movement
+                    `Created Shipment: ${shipment.id} (${shipment.type})`,
+                    shipment.id
+                );
+
+                return {
+                    shipments: [shipment, ...state.shipments],
+                    inventory: newInventory
+                };
+            }),
 
             updateShipmentStatus: (id, status) => set((state) => {
                 state.logAction(
                     state.currentUser?.id || 'system',
                     state.currentUser?.name || 'System',
                     'Update',
-                    'Sale', // Shipment relates to sales/logistics
+                    'Sale',
                     `Updated Shipment Status: ${status}`,
                     id
                 );
                 return {
                     shipments: state.shipments.map(s => s.id === id ? { ...s, status } : s)
+                };
+            }),
+
+            receiveShipment: (id) => set((state) => {
+                const shipment = state.shipments.find(s => s.id === id);
+                if (!shipment) throw new Error('Carga não encontrada');
+                if (shipment.type !== 'Transfer') throw new Error('Apenas transferências podem ser recebidas via estoque.');
+                if (shipment.status === 'Delivered') throw new Error('Carga já recebida.');
+                if (!shipment.destinationLocation || !shipment.items) throw new Error('Dados de destino inválidos.');
+
+                const newInventory = { ...state.inventory };
+
+                // Add stock to Destination
+                for (const item of shipment.items) {
+                    newInventory[shipment.destinationLocation][item.productType] += item.quantity;
+                }
+
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Stock',
+                    `Received Transfer Shipment: ${id} at ${shipment.destinationLocation}`,
+                    id
+                );
+
+                return {
+                    inventory: newInventory,
+                    shipments: state.shipments.map(s => s.id === id ? { ...s, status: 'Delivered' } : s)
                 };
             }),
 
@@ -437,7 +550,8 @@ export const useAppStore = create<AppState>()(
 
             updateSale: (updatedSale) => set((state) => {
                 const oldSale = state.sales.find(s => s.id === updatedSale.id);
-                const newInventory = { ...state.inventory };
+                // Create a deep copy to simulate changes
+                const newInventory = JSON.parse(JSON.stringify(state.inventory));
 
                 if (oldSale) {
                     // Revert old inventory deduction (Add back)
@@ -446,12 +560,14 @@ export const useAppStore = create<AppState>()(
                     });
                 }
 
-                // Apply new inventory deduction
-                updatedSale.items.forEach(item => {
-                    if (newInventory[updatedSale.location][item.productType] >= Number(item.quantity)) {
-                        newInventory[updatedSale.location][item.productType] -= Number(item.quantity);
+                // Check and Apply new inventory deduction
+                for (const item of updatedSale.items) {
+                    const currentStock = newInventory[updatedSale.location][item.productType];
+                    if (currentStock < Number(item.quantity)) {
+                        throw new Error(`Estoque insuficiente de ${item.productType} em ${updatedSale.location === 'Factory' ? 'Fábrica' : 'Itaguaí'} para atualização. Disponível (após reversão): ${currentStock}`);
                     }
-                });
+                    newInventory[updatedSale.location][item.productType] -= Number(item.quantity);
+                }
 
                 state.logAction(
                     state.currentUser?.id || 'system',

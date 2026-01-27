@@ -2,10 +2,16 @@ import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Plus, Search, Calendar, Edit, Trash2 } from 'lucide-react';
 import { type PurchaseOrder, type MaterialType } from '../types';
+import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Compras = () => {
-    const { purchaseOrders, addPurchaseOrder, updatePurchaseOrder, removePurchaseOrder, suppliers, currentUser } = useAppStore();
+    const { purchaseOrders, addPurchaseOrder, updatePurchaseOrder, removePurchaseOrder, suppliers } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Admin Auth State
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<'Edit' | 'Delete' | null>(null);
+    const [orderToActOn, setOrderToActOn] = useState<PurchaseOrder | null>(null);
 
     // Form State
     const [newOrder, setNewOrder] = useState<Partial<PurchaseOrder>>({
@@ -90,10 +96,45 @@ export const Compras = () => {
         setNewOrder({ supplierId: '', date: new Date().toISOString().split('T')[0], status: 'Pending', items: [], totalAmount: 0 });
     };
 
+    // Auth Wrappers
+    const requestEdit = (order: PurchaseOrder) => {
+        setOrderToActOn(order);
+        setPendingAction('Edit');
+        setAuthModalOpen(true);
+    };
+
+    const requestDelete = (order: PurchaseOrder) => {
+        setOrderToActOn(order);
+        setPendingAction('Delete');
+        setAuthModalOpen(true);
+    };
+
+    const confirmAction = () => {
+        if (!orderToActOn || !pendingAction) return;
+
+        if (pendingAction === 'Edit') {
+            setNewOrder(orderToActOn);
+            setIsModalOpen(true);
+        } else if (pendingAction === 'Delete') {
+            removePurchaseOrder(orderToActOn.id);
+        }
+
+        setAuthModalOpen(false);
+        setPendingAction(null);
+        setOrderToActOn(null);
+    };
+
     const getSupplierName = (id: string) => suppliers.find(s => s.id === id)?.name || 'Desconhecido';
 
     return (
         <div className="space-y-6">
+            <AdminAuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                onConfirm={confirmAction}
+                actionType={pendingAction || 'Edit'}
+            />
+
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-white">Compras</h1>
                 <button
@@ -163,31 +204,23 @@ export const Compras = () => {
                             <span className="text-xl font-bold text-white">R$ {order.totalAmount.toLocaleString()}</span>
                         </div>
                         <div className="flex gap-2">
-                            {currentUser?.role === 'Admin' && (
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => {
-                                            setNewOrder(order);
-                                            setIsModalOpen(true);
-                                        }}
-                                        className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
-                                        title="Editar Pedido"
-                                    >
-                                        <Edit className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            if (confirm('Tem certeza que deseja excluir este pedido? Esta ação não pode ser desfeita.')) {
-                                                removePurchaseOrder(order.id);
-                                            }
-                                        }}
-                                        className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                        title="Excluir Pedido"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            )}
+                            {/* Allow Edit/Delete for everyone but protected by password */}
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => requestEdit(order)}
+                                    className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                    title="Editar Pedido"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => requestDelete(order)}
+                                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                    title="Excluir Pedido"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
                             {order.status === 'Pending' && (
                                 <button
                                     onClick={() => {

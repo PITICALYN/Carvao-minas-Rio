@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType, type Location, type Sale } from '../types';
 import { Plus, Edit, Trash2, Printer, X } from 'lucide-react';
+import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Sales = () => {
     const { sales, addSale, updateSale, removeSale, currentUser } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
     const [currentSaleId, setCurrentSaleId] = useState<string | null>(null);
+
+    // Admin Auth State
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<'Edit' | 'Delete' | null>(null);
+    const [saleToActOn, setSaleToActOn] = useState<Sale | null>(null);
 
     // Form State
     const [location, setLocation] = useState<Location>(currentUser?.role === 'Itaguai' ? 'Itaguai' : 'Factory');
@@ -68,20 +74,44 @@ export const Sales = () => {
         }
     };
 
-    const handleEdit = (sale: Sale) => {
-        setCurrentSaleId(sale.id);
-        setLocation(sale.location);
-        setPaymentMethod(sale.paymentMethod);
-        setCustomerName(sale.customerName || '');
+    // Auth Wrappers
+    const requestEdit = (sale: Sale) => {
+        setSaleToActOn(sale);
+        setPendingAction('Edit');
+        setAuthModalOpen(true);
+    };
 
-        const newItems = sale.items.map(item => ({
-            type: item.productType,
-            qty: item.quantity.toString(),
-            price: item.unitPrice.toString()
-        }));
+    const requestDelete = (sale: Sale) => {
+        setSaleToActOn(sale);
+        setPendingAction('Delete');
+        setAuthModalOpen(true);
+    };
 
-        setItems(newItems);
-        setIsModalOpen(true);
+    const confirmAction = () => {
+        if (!saleToActOn || !pendingAction) return;
+
+        if (pendingAction === 'Edit') {
+            const sale = saleToActOn;
+            setCurrentSaleId(sale.id);
+            setLocation(sale.location);
+            setPaymentMethod(sale.paymentMethod);
+            setCustomerName(sale.customerName || '');
+
+            const newItems = sale.items.map(item => ({
+                type: item.productType,
+                qty: item.quantity.toString(),
+                price: item.unitPrice.toString()
+            }));
+
+            setItems(newItems);
+            setIsModalOpen(true);
+        } else if (pendingAction === 'Delete') {
+            removeSale(saleToActOn.id);
+        }
+
+        setAuthModalOpen(false);
+        setPendingAction(null);
+        setSaleToActOn(null);
     };
 
     const handleNew = () => {
@@ -93,6 +123,13 @@ export const Sales = () => {
 
     return (
         <div className="space-y-6">
+            <AdminAuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                onConfirm={confirmAction}
+                actionType={pendingAction || 'Edit'}
+            />
+
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-white">Vendas</h2>
@@ -155,28 +192,23 @@ export const Sales = () => {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex gap-2">
-                                            {currentUser?.role === 'Admin' && (
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => handleEdit(sale)}
-                                                        className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
-                                                        title="Editar Venda"
-                                                    >
-                                                        <Edit className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            if (confirm('Tem certeza que deseja excluir esta venda? O estoque será revertido.')) {
-                                                                removeSale(sale.id);
-                                                            }
-                                                        }}
-                                                        className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                        title="Excluir Venda"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            )}
+                                            {/* Allow Edit/Delete for everyone but protected by password */}
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => requestEdit(sale)}
+                                                    className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                    title="Editar Venda"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => requestDelete(sale)}
+                                                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                    title="Excluir Venda"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                             <button
                                                 onClick={() => setSelectedSale(sale)}
                                                 className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-400 transition-colors"
@@ -236,11 +268,17 @@ export const Sales = () => {
                                 <label className="block text-sm font-medium text-slate-300 mb-1">Cliente (Opcional)</label>
                                 <input
                                     type="text"
+                                    list="customers-list"
                                     value={customerName}
                                     onChange={(e) => setCustomerName(e.target.value)}
                                     className="w-full input-field px-4 py-2"
                                     placeholder="Nome do cliente"
                                 />
+                                <datalist id="customers-list">
+                                    {useAppStore.getState().customers.map((customer) => (
+                                        <option key={customer.id} value={customer.name} />
+                                    ))}
+                                </datalist>
                             </div>
 
                             <div>

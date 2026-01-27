@@ -16,11 +16,17 @@ export interface Product {
     price: number;
 }
 
+export interface BatchInput {
+    supplierId: string;
+    weightKg: number;
+}
+
 export interface ProductionBatch {
     id: string;
-    supplierId: string;
+    supplierId?: string; // Optional for legacy support
+    inputs: BatchInput[];
     date: string;
-    inputWeightKg: number;
+    inputWeightKg: number; // Total input weight (sum of inputs)
     outputs: {
         productType: ProductType;
         quantity: number; // number of bags
@@ -160,9 +166,17 @@ export interface Driver {
 
 export interface Shipment {
     id: string;
+    type: 'Sale' | 'Transfer'; // New field
     date: string;
     driverId: string;
-    salesIds: string[];
+    salesIds: string[]; // Only for type 'Sale'
+    // For type 'Transfer'
+    sourceLocation?: Location;
+    destinationLocation?: Location;
+    items?: {
+        productType: ProductType;
+        quantity: number;
+    }[];
     status: 'Planned' | 'InTransit' | 'Delivered';
 }
 
