@@ -756,7 +756,7 @@ export const useAppStore = create<AppState>()(
 
         }),
         {
-            name: 'charcoal-app-storage',
+            name: 'charcoal-app-storage-v2',
         }
     )
 );
