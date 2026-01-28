@@ -64,22 +64,21 @@ export const Dashboard = () => {
         const last30Days = [...Array(30)].map((_, i) => {
             const d = new Date();
             d.setDate(d.getDate() - (29 - i));
-            return d.toISOString().split('T')[0];
+            return d.toLocaleDateString('sv-SE');
         });
 
         return last30Days.map(date => {
             const daySales = sales.filter(s => s.date === date);
             return {
-                date: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-                total: daySales.reduce((acc, s) => acc + s.totalAmount, 0)
+                date: date.split('-').reverse().slice(0, 2).join('/'),
+                cash: daySales.filter(s => s.paymentMethod === 'Cash').reduce((acc, s) => acc + s.totalAmount, 0),
+                credit: daySales.filter(s => s.paymentMethod === 'Credit').reduce((acc, s) => acc + s.totalAmount, 0)
             };
         });
     }, [sales]);
 
     // 2. Production vs Loss
     const productionData = useMemo(() => {
-        // Group by material type or just show last 5 batches? Let's show aggregated by type for now
-        // Actually, let's show the last 7 days of production
         const last7DaysBatches = productionBatches.slice(-10); // Last 10 batches for better viz
         return last7DaysBatches.map(batch => ({
             name: `Lote ${batch.id.slice(0, 6)}`,
@@ -159,16 +158,20 @@ export const Dashboard = () => {
                                 <TrendingUp className="w-5 h-5 text-emerald-400" />
                                 Evolução de Vendas
                             </h3>
-                            <p className="text-sm text-slate-400">Últimos 30 dias</p>
+                            <p className="text-sm text-slate-400">Últimos 30 dias (Vista vs Prazo)</p>
                         </div>
                     </div>
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={salesData}>
                                 <defs>
-                                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                                    <linearGradient id="colorCash" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
                                         <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id="colorCredit" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
@@ -187,14 +190,26 @@ export const Dashboard = () => {
                                     tickFormatter={(value) => `R$${value / 1000}k`}
                                 />
                                 <Tooltip content={<CustomTooltip />} />
+                                <Legend />
                                 <Area
                                     type="monotone"
-                                    dataKey="total"
-                                    name="Vendas"
+                                    dataKey="cash"
+                                    name="À Vista"
+                                    stackId="1"
                                     stroke="#10B981"
-                                    strokeWidth={3}
+                                    strokeWidth={2}
                                     fillOpacity={1}
-                                    fill="url(#colorSales)"
+                                    fill="url(#colorCash)"
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="credit"
+                                    name="A Prazo"
+                                    stackId="1"
+                                    stroke="#3B82F6"
+                                    strokeWidth={2}
+                                    fillOpacity={1}
+                                    fill="url(#colorCredit)"
                                 />
                             </AreaChart>
                         </ResponsiveContainer>

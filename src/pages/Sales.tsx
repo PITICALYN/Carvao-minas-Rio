@@ -18,6 +18,7 @@ export const Sales = () => {
     // Form State
     const [location, setLocation] = useState<Location>(currentUser?.role === 'Itaguai' ? 'Itaguai' : 'Factory');
     const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'Credit'>('Cash');
+    const [paymentTerm, setPaymentTerm] = useState<number>(30); // Default 30 days
     const [customerName, setCustomerName] = useState('');
     const [items, setItems] = useState<{ type: ProductType; qty: string; price: string }[]>([
         { type: '3kg', qty: '', price: '' },
@@ -48,14 +49,22 @@ export const Sales = () => {
         if (finalItems.length === 0) return;
 
         try {
+            const date = new Date();
+            const dueDate = new Date(date);
+            if (paymentMethod === 'Credit') {
+                dueDate.setDate(date.getDate() + paymentTerm);
+            }
+
             const saleData = {
                 id: currentSaleId || crypto.randomUUID(),
-                date: new Date().toISOString().split('T')[0],
+                date: date.toLocaleDateString('sv-SE'),
                 location,
                 customerName,
                 items: finalItems,
                 totalAmount: calculateTotal(),
                 paymentMethod,
+                paymentTerm: paymentMethod === 'Credit' ? paymentTerm : undefined,
+                dueDate: paymentMethod === 'Credit' ? dueDate.toLocaleDateString('sv-SE') : undefined,
                 timestamp: currentSaleId ? sales.find(s => s.id === currentSaleId)?.timestamp || Date.now() : Date.now(),
             };
 
@@ -95,6 +104,7 @@ export const Sales = () => {
             setCurrentSaleId(sale.id);
             setLocation(sale.location);
             setPaymentMethod(sale.paymentMethod);
+            if (sale.paymentTerm) setPaymentTerm(sale.paymentTerm);
             setCustomerName(sale.customerName || '');
 
             const newItems = sale.items.map(item => ({
@@ -262,6 +272,19 @@ export const Sales = () => {
                                         <option value="Credit">A Prazo</option>
                                     </select>
                                 </div>
+                                {paymentMethod === 'Credit' && (
+                                    <div className="col-span-2">
+                                        <label className="block text-sm font-medium text-slate-300 mb-1">Prazo (Dias)</label>
+                                        <input
+                                            type="number"
+                                            value={paymentTerm}
+                                            onChange={(e) => setPaymentTerm(Number(e.target.value))}
+                                            className="w-full input-field px-4 py-2"
+                                            placeholder="Ex: 30"
+                                            min="1"
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             <div>
@@ -360,6 +383,7 @@ export const Sales = () => {
                     </div>
                 </div>
             )}
+
             {/* Romaneio Modal */}
             {selectedSale && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 print:bg-white print:absolute print:inset-0">

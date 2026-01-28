@@ -66,6 +66,8 @@ export interface Sale {
     items: SaleItem[];
     totalAmount: number;
     paymentMethod: 'Cash' | 'Credit';
+    paymentTerm?: number; // Days
+    dueDate?: string; // ISO Date
     timestamp: number;
 }
 

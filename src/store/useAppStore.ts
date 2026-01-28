@@ -241,6 +241,21 @@ export const useAppStore = create<AppState>()(
                     newInventory[sale.location][item.productType] -= Number(item.quantity);
                 }
 
+                // Auto-create Financial Transaction
+                const transaction: FinancialTransaction = {
+                    id: crypto.randomUUID(),
+                    date: sale.date,
+                    dueDate: sale.dueDate || sale.date,
+                    type: 'Income',
+                    category: 'Sales',
+                    description: `Venda ${sale.customerName || 'Consumidor Final'} - ${sale.items.map(i => `${i.quantity}x ${i.productType}`).join(', ')}`,
+                    amount: sale.totalAmount,
+                    status: sale.paymentMethod === 'Credit' ? 'Pending' : 'Paid',
+                    entityName: sale.customerName || 'Consumidor Final',
+                    // Try to find customer ID if possible
+                    entityId: state.customers.find(c => c.name === sale.customerName)?.id
+                };
+
                 // Log Action
                 state.logAction(
                     state.currentUser?.id || 'system',
@@ -253,7 +268,8 @@ export const useAppStore = create<AppState>()(
 
                 return {
                     sales: [sale, ...state.sales],
-                    inventory: newInventory
+                    inventory: newInventory,
+                    transactions: [...state.transactions, transaction]
                 };
             }),
 
@@ -703,32 +719,55 @@ export const useAppStore = create<AppState>()(
                     });
                 });
 
-                // 2. Check Overdue Bills (Accounts Payable)
+                // 2. Check Overdue Bills (Accounts Payable) & Receivables
                 const today = new Date();
-                today.setHours(0, 0, 0, 0);
+                const todayStr = today.toLocaleDateString('sv-SE');
+                const todayDate = new Date(todayStr + 'T00:00:00'); // Local Midnight
 
                 state.transactions.forEach(t => {
-                    if (t.type === 'Expense' && t.status === 'Pending') {
-                        const dueDate = new Date(t.date); // Assuming date is due date for simplicity or add dueDate field
-                        if (dueDate < today) {
+                    if (t.status === 'Pending') {
+                        const dueDate = new Date(t.dueDate + 'T00:00:00'); // Local Midnight
+                        // Reset hours not needed if we use YYYY-MM-DD strings to create dates
+
+                        const diffTime = dueDate.getTime() - todayDate.getTime();
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                        const isReceivable = t.type === 'Income';
+                        const prefix = isReceivable ? 'Recebimento' : 'Pagamento';
+                        const link = '/financeiro';
+
+                        if (diffDays < 0) {
+                            // Overdue
                             newNotifications.push({
                                 id: crypto.randomUUID(),
-                                title: 'Conta Atrasada',
-                                message: `A conta "${t.description}" de R$ ${t.amount} venceu em ${dueDate.toLocaleDateString()}.`,
+                                title: `${prefix} Atrasado`,
+                                message: `O ${prefix.toLowerCase()} "${t.description}" de R$ ${t.amount.toLocaleString()} venceu em ${dueDate.toLocaleDateString()}.`,
                                 type: 'error',
                                 timestamp: Date.now(),
                                 read: false,
-                                link: '/financeiro'
+                                link
                             });
-                        } else if (dueDate.getTime() === today.getTime()) {
+                        } else if (diffDays === 0) {
+                            // Due Today
                             newNotifications.push({
                                 id: crypto.randomUUID(),
-                                title: 'Conta Vence Hoje',
-                                message: `A conta "${t.description}" de R$ ${t.amount} vence hoje!`,
+                                title: `${prefix} Vence Hoje`,
+                                message: `O ${prefix.toLowerCase()} "${t.description}" de R$ ${t.amount.toLocaleString()} vence hoje!`,
                                 type: 'warning',
                                 timestamp: Date.now(),
                                 read: false,
-                                link: '/financeiro'
+                                link
+                            });
+                        } else if (diffDays <= 3) {
+                            // Due Soon
+                            newNotifications.push({
+                                id: crypto.randomUUID(),
+                                title: `${prefix} Próximo`,
+                                message: `O ${prefix.toLowerCase()} "${t.description}" vence em ${diffDays} dias.`,
+                                type: 'info',
+                                timestamp: Date.now(),
+                                read: false,
+                                link
                             });
                         }
                     }
