@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType, type Location, type Sale } from '../types';
 import { Plus, Edit, Trash2, Printer, X } from 'lucide-react';
 import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Sales = () => {
-    const { sales, addSale, updateSale, removeSale, currentUser } = useAppStore();
+    const { sales, addSale, updateSale, removeSale, currentUser, getPrice, customers } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
     const [currentSaleId, setCurrentSaleId] = useState<string | null>(null);
@@ -25,8 +25,21 @@ export const Sales = () => {
     ]);
 
     const handleAddItem = () => {
-        setItems([...items, { type: '3kg', qty: '', price: '' }]);
+        const customer = customers.find(c => c.name === customerName);
+        const price = getPrice('3kg', paymentMethod, customer?.id);
+        setItems([...items, { type: '3kg', qty: '', price: price.toString() }]);
     };
+
+    // Auto-update prices when Payment Method or Customer changes
+    useEffect(() => {
+        const customer = customers.find(c => c.name === customerName);
+        const customerId = customer?.id;
+
+        setItems(currentItems => currentItems.map(item => ({
+            ...item,
+            price: getPrice(item.type, paymentMethod, customerId).toString()
+        })));
+    }, [paymentMethod, customerName, getPrice, customers]);
 
     const calculateTotal = () => {
         return items.reduce((sum, item) => {
@@ -312,8 +325,13 @@ export const Sales = () => {
                                             <select
                                                 value={item.type}
                                                 onChange={(e) => {
+                                                    const newType = e.target.value as ProductType;
+                                                    const customer = customers.find(c => c.name === customerName);
+                                                    const newPrice = getPrice(newType, paymentMethod, customer?.id);
+
                                                     const newItems = [...items];
-                                                    newItems[idx].type = e.target.value as ProductType;
+                                                    newItems[idx].type = newType;
+                                                    newItems[idx].price = newPrice.toString();
                                                     setItems(newItems);
                                                 }}
                                                 className="w-32 input-field px-3 py-2 text-sm"

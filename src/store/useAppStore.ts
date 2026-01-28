@@ -18,6 +18,7 @@ interface AppState {
 
     // Helpers
     getSupplierStats: (supplierId: string) => { totalInput: number, avgLoss: number };
+    getPrice: (productType: ProductType, paymentMethod: 'Cash' | 'Credit', customerId?: string) => number;
     // Auth
     currentUser: User | null;
     users: User[];
@@ -234,11 +235,13 @@ export const useAppStore = create<AppState>()(
                 // Check Stock Availability
                 const newInventory = { ...state.inventory };
                 for (const item of sale.items) {
-                    const currentStock = newInventory[sale.location][item.productType];
-                    if (currentStock < Number(item.quantity)) {
-                        throw new Error(`Estoque insuficiente de ${item.productType} em ${sale.location === 'Factory' ? 'Fábrica' : 'Itaguaí'}. Disponível: ${currentStock}`);
+                    const currentStock = newInventory[sale.location][item.productType] || 0;
+                    const requestedQty = Number(item.quantity);
+
+                    if (currentStock < requestedQty) {
+                        throw new Error(`Estoque insuficiente de ${item.productType} em ${sale.location === 'Factory' ? 'Fábrica' : 'Itaguaí'}. Disponível: ${currentStock}, Solicitado: ${requestedQty}`);
                     }
-                    newInventory[sale.location][item.productType] -= Number(item.quantity);
+                    newInventory[sale.location][item.productType] -= requestedQty;
                 }
 
                 // Auto-create Financial Transaction
@@ -316,6 +319,46 @@ export const useAppStore = create<AppState>()(
                     : 0;
 
                 return { totalInput, avgLoss };
+            },
+
+            getPrice: (productType, paymentMethod, customerId) => {
+                const state = get();
+                // Removed unused 'let price = 0;'
+
+                // 1. Check for Customer Specific Table
+                if (customerId) {
+                    const customer = state.customers.find(c => c.id === customerId);
+                    if (customer?.priceTableId) {
+                        const table = state.priceTables.find(t => t.id === customer.priceTableId);
+                        if (table?.prices[productType]) {
+                            return table.prices[productType];
+                        }
+                    }
+                }
+
+                // 2. Check for Default Tables based on Payment Method
+                const defaultTableName = paymentMethod === 'Credit' ? 'Tabela Padrão - A Prazo' : 'Tabela Padrão - À Vista';
+                const defaultTable = state.priceTables.find(t => t.name === defaultTableName);
+
+                if (defaultTable?.prices[productType]) {
+                    return defaultTable.prices[productType];
+                }
+
+                // 3. Fallback / Init Defaults if missing (Self-healing)
+                // If we are here, it means no table was found. Let's return a hardcoded default but also log a warning or handle it.
+                // For MVP, we'll return hardcoded defaults.
+                if (paymentMethod === 'Credit') {
+                    if (productType === '3kg') return 12;
+                    if (productType === '5kg') return 18;
+                    if (productType === 'Paulistao') return 45;
+                    if (productType === 'Bulk') return 1.5;
+                } else {
+                    if (productType === '3kg') return 10;
+                    if (productType === '5kg') return 15;
+                    if (productType === 'Paulistao') return 40;
+                    if (productType === 'Bulk') return 1.2;
+                }
+                return 0;
             },
 
             // --- New Actions ---
