@@ -156,6 +156,7 @@ export interface FinancialTransaction {
     status: PaymentStatus;
     entityId?: string; // CustomerID or SupplierID
     entityName: string;
+    location?: Location; // 'Factory' | 'Itaguai'
 }
 
 // --- Module: Expedição ---

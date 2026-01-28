@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Search, Truck, Calendar, Package, ArrowRight, Printer, CheckCircle } from 'lucide-react';
+import { Plus, Search, Truck, Calendar, Package, ArrowRight, Printer, CheckCircle, Edit, Trash2 } from 'lucide-react';
 import { type Driver, type Shipment, type ProductType, type Location } from '../types';
+import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Expedicao = () => {
-    const { drivers, addDriver, shipments, addShipment, updateShipmentStatus, receiveShipment, sales } = useAppStore();
+    const { drivers, addDriver, updateDriver, removeDriver, shipments, addShipment, updateShipment, removeShipment, updateShipmentStatus, receiveShipment, sales } = useAppStore();
     const [isDriverModalOpen, setIsDriverModalOpen] = useState(false);
     const [isShipmentModalOpen, setIsShipmentModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'shipments' | 'drivers'>('shipments');
+
+    // Admin Auth State
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<'Edit' | 'Delete' | null>(null);
+    const [itemToActOn, setItemToActOn] = useState<{ type: 'Shipment' | 'Driver', data: any } | null>(null);
 
     // Driver Form State
     const [newDriver, setNewDriver] = useState<Partial<Driver>>({
@@ -35,12 +41,18 @@ export const Expedicao = () => {
         e.preventDefault();
         if (!newDriver.name || !newDriver.licensePlate) return;
 
-        addDriver({
-            id: crypto.randomUUID(),
+        const driverData = {
+            id: newDriver.id || crypto.randomUUID(),
             name: newDriver.name,
             licensePlate: newDriver.licensePlate,
             vehicleModel: newDriver.vehicleModel || ''
-        } as Driver);
+        } as Driver;
+
+        if (newDriver.id) {
+            updateDriver(driverData);
+        } else {
+            addDriver(driverData);
+        }
 
         setIsDriverModalOpen(false);
         setNewDriver({ name: '', licensePlate: '', vehicleModel: '' });
@@ -61,8 +73,8 @@ export const Expedicao = () => {
         }
 
         try {
-            addShipment({
-                id: crypto.randomUUID(),
+            const shipmentData = {
+                id: newShipment.id || crypto.randomUUID(),
                 type: shipmentType,
                 date: newShipment.date || new Date().toISOString(),
                 driverId: newShipment.driverId,
@@ -71,7 +83,13 @@ export const Expedicao = () => {
                 destinationLocation: shipmentType === 'Transfer' ? newShipment.destinationLocation : undefined,
                 items: shipmentType === 'Transfer' ? newShipment.items : undefined,
                 status: newShipment.status || 'Planned'
-            } as Shipment);
+            } as Shipment;
+
+            if (newShipment.id) {
+                updateShipment(shipmentData);
+            } else {
+                addShipment(shipmentData);
+            }
 
             setIsShipmentModalOpen(false);
             // Reset form
@@ -120,6 +138,45 @@ export const Expedicao = () => {
     };
 
     const getDriverName = (id: string) => drivers.find(d => d.id === id)?.name || 'Desconhecido';
+
+    // Auth Wrappers
+    const requestEdit = (type: 'Shipment' | 'Driver', data: any) => {
+        setItemToActOn({ type, data });
+        setPendingAction('Edit');
+        setAuthModalOpen(true);
+    };
+
+    const requestDelete = (type: 'Shipment' | 'Driver', data: any) => {
+        setItemToActOn({ type, data });
+        setPendingAction('Delete');
+        setAuthModalOpen(true);
+    };
+
+    const confirmAction = () => {
+        if (!itemToActOn || !pendingAction) return;
+
+        if (pendingAction === 'Edit') {
+            if (itemToActOn.type === 'Shipment') {
+                const s = itemToActOn.data as Shipment;
+                setNewShipment(s);
+                setShipmentType(s.type);
+                setIsShipmentModalOpen(true);
+            } else {
+                setNewDriver(itemToActOn.data as Driver);
+                setIsDriverModalOpen(true);
+            }
+        } else if (pendingAction === 'Delete') {
+            if (itemToActOn.type === 'Shipment') {
+                removeShipment(itemToActOn.data.id);
+            } else {
+                removeDriver(itemToActOn.data.id);
+            }
+        }
+
+        setAuthModalOpen(false);
+        setPendingAction(null);
+        setItemToActOn(null);
+    };
 
     // Filter available sales
     const availableSales = sales.filter(s => {
@@ -198,6 +255,12 @@ export const Expedicao = () => {
 
     return (
         <div className="space-y-6">
+            <AdminAuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                onConfirm={confirmAction}
+                actionType={pendingAction || 'Edit'}
+            />
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-white">Expedição</h1>
                 <div className="flex gap-2">
@@ -228,7 +291,19 @@ export const Expedicao = () => {
                             />
                         </div>
                         <button
-                            onClick={() => setIsShipmentModalOpen(true)}
+                            onClick={() => {
+                                setNewShipment({
+                                    date: new Date().toISOString().split('T')[0],
+                                    driverId: '',
+                                    salesIds: [],
+                                    status: 'Planned',
+                                    sourceLocation: 'Factory',
+                                    destinationLocation: 'Itaguai',
+                                    items: []
+                                });
+                                setShipmentType('Sale');
+                                setIsShipmentModalOpen(true);
+                            }}
                             className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg"
                         >
                             <Plus className="w-4 h-4" />
@@ -239,13 +314,29 @@ export const Expedicao = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {shipments.map(shipment => (
                             <div key={shipment.id} className="glass-card p-5 rounded-xl space-y-4 relative group">
-                                <button
-                                    onClick={() => printShipment(shipment)}
-                                    className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
-                                    title="Imprimir Guia"
-                                >
-                                    <Printer className="w-4 h-4" />
-                                </button>
+                                <div className="absolute top-4 right-4 flex gap-2">
+                                    <button
+                                        onClick={() => printShipment(shipment)}
+                                        className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
+                                        title="Imprimir Guia"
+                                    >
+                                        <Printer className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => requestEdit('Shipment', shipment)}
+                                        className="p-2 bg-white/5 hover:bg-blue-500/20 rounded-lg text-slate-400 hover:text-blue-400 transition-colors"
+                                        title="Editar Carga"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => requestDelete('Shipment', shipment)}
+                                        className="p-2 bg-white/5 hover:bg-red-500/20 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
+                                        title="Excluir Carga"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
 
                                 <div className="flex justify-between items-start pr-12">
                                     <div>
@@ -344,7 +435,10 @@ export const Expedicao = () => {
                 <>
                     <div className="flex justify-end mb-6">
                         <button
-                            onClick={() => setIsDriverModalOpen(true)}
+                            onClick={() => {
+                                setNewDriver({ name: '', licensePlate: '', vehicleModel: '' });
+                                setIsDriverModalOpen(true);
+                            }}
                             className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg"
                         >
                             <Plus className="w-4 h-4" />
@@ -354,13 +448,31 @@ export const Expedicao = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {drivers.map(driver => (
-                            <div key={driver.id} className="glass-card p-5 rounded-xl flex items-center gap-4">
-                                <div className="p-3 bg-slate-800 rounded-full">
-                                    <Truck className="w-6 h-6 text-slate-400" />
+                            <div key={driver.id} className="glass-card p-5 rounded-xl flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-slate-800 rounded-full">
+                                        <Truck className="w-6 h-6 text-slate-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-white text-lg">{driver.name}</h3>
+                                        <p className="text-sm text-slate-400">{driver.vehicleModel} • {driver.licensePlate}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-white text-lg">{driver.name}</h3>
-                                    <p className="text-sm text-slate-400">{driver.vehicleModel} • {driver.licensePlate}</p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => requestEdit('Driver', driver)}
+                                        className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
+                                        title="Editar Motorista"
+                                    >
+                                        <Edit className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => requestDelete('Driver', driver)}
+                                        className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                                        title="Excluir Motorista"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
                                 </div>
                             </div>
                         ))}

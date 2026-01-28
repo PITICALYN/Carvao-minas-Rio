@@ -62,7 +62,11 @@ interface AppState {
     drivers: Driver[];
     shipments: Shipment[];
     addDriver: (driver: Driver) => void;
+    updateDriver: (driver: Driver) => void;
+    removeDriver: (id: string) => void;
     addShipment: (shipment: Shipment) => void;
+    updateShipment: (shipment: Shipment) => void;
+    removeShipment: (id: string) => void;
     updateShipmentStatus: (id: string, status: 'Planned' | 'InTransit' | 'Delivered') => void;
     receiveShipment: (id: string) => void; // New action to receive transfer
 
@@ -256,7 +260,8 @@ export const useAppStore = create<AppState>()(
                     status: sale.paymentMethod === 'Credit' ? 'Pending' : 'Paid',
                     entityName: sale.customerName || 'Consumidor Final',
                     // Try to find customer ID if possible
-                    entityId: state.customers.find(c => c.name === sale.customerName)?.id
+                    entityId: state.customers.find(c => c.name === sale.customerName)?.id,
+                    location: sale.location // Add location from sale
                 };
 
                 // Log Action
@@ -484,6 +489,35 @@ export const useAppStore = create<AppState>()(
                 drivers: [...state.drivers, driver]
             })),
 
+            updateDriver: (updatedDriver) => set((state) => {
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Sale', // Driver resource not defined yet
+                    `Updated Driver: ${updatedDriver.name}`,
+                    updatedDriver.id
+                );
+                return {
+                    drivers: state.drivers.map(d => d.id === updatedDriver.id ? updatedDriver : d)
+                };
+            }),
+
+            removeDriver: (id) => set((state) => {
+                const driver = state.drivers.find(d => d.id === id);
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Delete',
+                    'Sale',
+                    `Deleted Driver: ${driver?.name || id}`,
+                    id
+                );
+                return {
+                    drivers: state.drivers.filter(d => d.id !== id)
+                };
+            }),
+
             addShipment: (shipment) => set((state) => {
                 const newInventory = { ...state.inventory };
 
@@ -509,6 +543,69 @@ export const useAppStore = create<AppState>()(
 
                 return {
                     shipments: [shipment, ...state.shipments],
+                    inventory: newInventory
+                };
+            }),
+
+            updateShipment: (updatedShipment) => set((state) => {
+                const oldShipment = state.shipments.find(s => s.id === updatedShipment.id);
+                const newInventory = { ...state.inventory };
+
+                // Revert Old Stock if Transfer
+                if (oldShipment?.type === 'Transfer' && oldShipment.sourceLocation && oldShipment.items) {
+                    oldShipment.items.forEach(item => {
+                        newInventory[oldShipment.sourceLocation!][item.productType] += item.quantity;
+                    });
+                }
+
+                // Apply New Stock if Transfer
+                if (updatedShipment.type === 'Transfer' && updatedShipment.sourceLocation && updatedShipment.items) {
+                    for (const item of updatedShipment.items) {
+                        const currentStock = newInventory[updatedShipment.sourceLocation][item.productType];
+                        if (currentStock < item.quantity) {
+                            throw new Error(`Estoque insuficiente de ${item.productType} em ${updatedShipment.sourceLocation}. Disponível: ${currentStock}`);
+                        }
+                        newInventory[updatedShipment.sourceLocation][item.productType] -= item.quantity;
+                    }
+                }
+
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Update',
+                    'Stock',
+                    `Updated Shipment: ${updatedShipment.id}`,
+                    updatedShipment.id
+                );
+
+                return {
+                    shipments: state.shipments.map(s => s.id === updatedShipment.id ? updatedShipment : s),
+                    inventory: newInventory
+                };
+            }),
+
+            removeShipment: (id) => set((state) => {
+                const shipment = state.shipments.find(s => s.id === id);
+                const newInventory = { ...state.inventory };
+
+                // Revert Stock if Transfer
+                if (shipment?.type === 'Transfer' && shipment.sourceLocation && shipment.items) {
+                    shipment.items.forEach(item => {
+                        newInventory[shipment.sourceLocation!][item.productType] += item.quantity;
+                    });
+                }
+
+                state.logAction(
+                    state.currentUser?.id || 'system',
+                    state.currentUser?.name || 'System',
+                    'Delete',
+                    'Stock',
+                    `Deleted Shipment: ${id}`,
+                    id
+                );
+
+                return {
+                    shipments: state.shipments.filter(s => s.id !== id),
                     inventory: newInventory
                 };
             }),

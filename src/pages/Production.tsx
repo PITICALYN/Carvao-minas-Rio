@@ -333,17 +333,17 @@ export const Production = () => {
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => requestEdit(batch)}
-                                                className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
                                                 title="Editar Produção"
                                             >
-                                                <Edit className="w-4 h-4" />
+                                                <Edit className="w-5 h-5" />
                                             </button>
                                             <button
                                                 onClick={() => requestDelete(batch)}
-                                                className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                                                 title="Excluir Produção"
                                             >
-                                                <Trash2 className="w-4 h-4" />
+                                                <Trash2 className="w-5 h-5" />
                                             </button>
                                         </div>
                                     </td>

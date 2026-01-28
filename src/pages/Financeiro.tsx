@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Plus, Search, TrendingUp, DollarSign, Calendar, ArrowUpRight, ArrowDownLeft, Printer, Edit, Trash2 } from 'lucide-react';
-import { type FinancialTransaction, type TransactionCategory } from '../types';
+import { type FinancialTransaction, type TransactionCategory, type Location } from '../types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { AdminAuthModal } from '../components/AdminAuthModal';
 
@@ -9,6 +9,7 @@ export const Financeiro = () => {
     const { transactions, addTransaction, updateTransaction, removeTransaction } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [filterType, setFilterType] = useState<'all' | 'Income' | 'Expense'>('all');
+    const [filterLocation, setFilterLocation] = useState<'all' | Location>('all');
 
     // Admin Auth State
     const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -24,7 +25,8 @@ export const Financeiro = () => {
         description: '',
         amount: 0,
         status: 'Pending',
-        entityName: ''
+        entityName: '',
+        location: 'Factory' // Default
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -41,7 +43,8 @@ export const Financeiro = () => {
             amount: Number(newTransaction.amount),
             status: newTransaction.status || 'Pending',
             entityName: newTransaction.entityName || '',
-            entityId: newTransaction.entityId
+            entityId: newTransaction.entityId,
+            location: newTransaction.location
         } as FinancialTransaction;
 
         if (newTransaction.id) {
@@ -59,7 +62,8 @@ export const Financeiro = () => {
             description: '',
             amount: 0,
             status: 'Pending',
-            entityName: ''
+            entityName: '',
+            location: 'Factory'
         });
     };
 
@@ -91,10 +95,14 @@ export const Financeiro = () => {
         setTransactionToActOn(null);
     };
 
-    const filteredTransactions = transactions.filter(t => filterType === 'all' || t.type === filterType);
+    const filteredTransactions = transactions.filter(t => {
+        const typeMatch = filterType === 'all' || t.type === filterType;
+        const locationMatch = filterLocation === 'all' || t.location === filterLocation;
+        return typeMatch && locationMatch;
+    });
 
-    const totalIncome = transactions.filter(t => t.type === 'Income').reduce((acc, t) => acc + t.amount, 0);
-    const totalExpense = transactions.filter(t => t.type === 'Expense').reduce((acc, t) => acc + t.amount, 0);
+    const totalIncome = filteredTransactions.filter(t => t.type === 'Income').reduce((acc, t) => acc + t.amount, 0);
+    const totalExpense = filteredTransactions.filter(t => t.type === 'Expense').reduce((acc, t) => acc + t.amount, 0);
     const balance = totalIncome - totalExpense;
 
     // Cash Flow Projection (Next 30 Days)
@@ -110,7 +118,8 @@ export const Financeiro = () => {
 
             // Find transactions due on this date
             const dailyTransactions = transactions.filter(t =>
-                t.status === 'Pending' && t.dueDate === dateStr
+                t.status === 'Pending' && t.dueDate === dateStr &&
+                (filterLocation === 'all' || t.location === filterLocation)
             );
 
             const dailyIncome = dailyTransactions
@@ -284,6 +293,16 @@ export const Financeiro = () => {
                     >
                         Despesas
                     </button>
+                    <div className="w-px h-6 bg-white/10 mx-2"></div>
+                    <select
+                        value={filterLocation}
+                        onChange={(e) => setFilterLocation(e.target.value as 'all' | Location)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-300 outline-none"
+                    >
+                        <option value="all">Todas Unidades</option>
+                        <option value="Factory">Fábrica</option>
+                        <option value="Itaguai">Itaguaí</option>
+                    </select>
                 </div>
             </div>
 
@@ -306,6 +325,14 @@ export const Financeiro = () => {
                                             <span>{transaction.entityName}</span>
                                         </>
                                     )}
+                                    {transaction.location && (
+                                        <>
+                                            <span>•</span>
+                                            <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border ${transaction.location === 'Factory' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                                                {transaction.location === 'Factory' ? 'Fábrica' : 'Itaguaí'}
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -322,20 +349,20 @@ export const Financeiro = () => {
                                     {transaction.status === 'Paid' ? 'Pago/Recebido' : transaction.status === 'Pending' ? 'Pendente' : 'Atrasado'}
                                 </span>
                             </div>
-                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex gap-2">
                                 <button
                                     onClick={() => requestEdit(transaction)}
-                                    className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                    className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
                                     title="Editar"
                                 >
-                                    <Edit className="w-4 h-4" />
+                                    <Edit className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={() => requestDelete(transaction)}
-                                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                    className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                                     title="Excluir"
                                 >
-                                    <Trash2 className="w-4 h-4" />
+                                    <Trash2 className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
@@ -410,6 +437,18 @@ export const Financeiro = () => {
                                         <option value="Other">Outros</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Local (Unidade)</label>
+                                <select
+                                    value={newTransaction.location}
+                                    onChange={e => setNewTransaction({ ...newTransaction, location: e.target.value as Location })}
+                                    className="w-full input-field px-4 py-2"
+                                >
+                                    <option value="Factory">Fábrica</option>
+                                    <option value="Itaguai">Itaguaí</option>
+                                </select>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">

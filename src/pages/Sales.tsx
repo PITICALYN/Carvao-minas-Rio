@@ -167,7 +167,7 @@ export const Sales = () => {
                 </button>
             </div>
 
-            <div className="glass-card rounded-2xl overflow-hidden">
+            <div className="glass-card rounded-2xl overflow-x-auto">
                 <table className="w-full text-left">
                     <thead className="bg-white/5 border-b border-white/10">
                         <tr>
@@ -219,17 +219,17 @@ export const Sales = () => {
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => requestEdit(sale)}
-                                                    className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                    className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
                                                     title="Editar Venda"
                                                 >
-                                                    <Edit className="w-4 h-4" />
+                                                    <Edit className="w-5 h-5" />
                                                 </button>
                                                 <button
                                                     onClick={() => requestDelete(sale)}
-                                                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                    className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                                                     title="Excluir Venda"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Trash2 className="w-5 h-5" />
                                                 </button>
                                             </div>
                                             <button
