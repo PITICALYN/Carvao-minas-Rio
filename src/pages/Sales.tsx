@@ -60,6 +60,11 @@ export const Sales = () => {
             total: (parseFloat(item.qty) || 0) * (parseFloat(item.price) || 0)
         })).filter(i => i.quantity > 0);
 
+        if (finalItems.some(item => item.quantity <= 0 || item.unitPrice < 0)) {
+            alert('Quantidade e preço devem ser valores positivos.');
+            return;
+        }
+
         if (finalItems.length === 0) return;
 
         try {
@@ -144,9 +149,11 @@ export const Sales = () => {
     };
 
     const handleNew = () => {
+        const customer = customers.find(c => c.name === customerName);
+        const initialPrice = getPrice('3kg', paymentMethod, customer?.id);
         setCurrentSaleId(null);
         setCustomerName('');
-        setItems([{ type: '3kg', qty: '', price: '' }]);
+        setItems([{ type: '3kg', qty: '', price: initialPrice.toString() }]);
         setIsModalOpen(true);
     };
 
@@ -311,7 +318,7 @@ export const Sales = () => {
                                             onChange={(e) => setPaymentTerm(Number(e.target.value))}
                                             className="w-full input-field px-4 py-2"
                                             placeholder="Ex: 30"
-                                            min="1"
+                                            min="0"
                                         />
                                     </div>
                                 )}
@@ -399,6 +406,8 @@ export const Sales = () => {
                                                     setItems(newItems);
                                                 }}
                                                 className="w-24 input-field px-3 py-2 text-sm"
+                                                min="0"
+                                                step="any"
                                                 placeholder="Qtd"
                                             />
                                             <input
@@ -410,7 +419,10 @@ export const Sales = () => {
                                                     setItems(newItems);
                                                 }}
                                                 className="flex-1 input-field px-3 py-2 text-sm"
+                                                min="0"
+                                                step="0.01"
                                                 placeholder="Preço Unit."
+                                                disabled={!(currentUser?.role === 'Admin' || currentUser?.role === 'Director' || currentUser?.role === 'Financial')}
                                             />
                                         </div>
                                     ))}

@@ -563,8 +563,19 @@ export const useAppStore = create<AppState>()(
             }
 
             // 2. Check for Default Tables based on Payment Method
-            const defaultTableName = paymentMethod === 'Credit' ? 'Tabela Padrão - A Prazo' : 'Tabela Padrão - À Vista';
-            const defaultTable = state.priceTables.find(t => t.name === defaultTableName);
+            const isCredit = paymentMethod === 'Credit';
+            const suffix = isCredit ? 'A Prazo' : 'À Vista';
+
+            // Try exact match first
+            const defaultTableName = isCredit ? 'Tabela Padrão - A Prazo' : 'Tabela Padrão - À Vista';
+            let defaultTable = state.priceTables.find(t => t.name === defaultTableName);
+
+            // Fallback: search for any table containing the suffix if no exact default found
+            if (!defaultTable) {
+                defaultTable = state.priceTables.find(t =>
+                    t.name.toLowerCase().includes(suffix.toLowerCase())
+                );
+            }
 
             if (defaultTable?.prices[productType]) {
                 return defaultTable.prices[productType];
