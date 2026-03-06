@@ -118,7 +118,7 @@ export const Layout = () => {
                     <img
                         src={useAppStore.getState().systemSettings.logoUrl}
                         alt="Logo"
-                        className="h-24 w-24 mb-2 rounded-full border-2 border-emerald-500/20 object-cover shadow-xl"
+                        className="h-24 w-24 mb-2 rounded-full border-2 border-blue-500/20 object-cover shadow-xl"
                     />
                     <p className="text-sm font-bold text-white text-center">{useAppStore.getState().systemSettings.title}</p>
                 </div>
@@ -181,8 +181,8 @@ export const Layout = () => {
 
                 <div className="p-4 border-t border-white/10">
                     <div className="flex items-center gap-3 mb-4 px-2">
-                        <div className="p-2 bg-emerald-500/20 rounded-full">
-                            <User className="w-5 h-5 text-emerald-400" />
+                        <div className="p-2 bg-blue-500/20 rounded-full">
+                            <User className="w-5 h-5 text-blue-400" />
                         </div>
                         <div>
                             <p className="text-sm font-bold text-white">{currentUser?.name}</p>
