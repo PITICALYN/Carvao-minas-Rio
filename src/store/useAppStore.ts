@@ -90,12 +90,16 @@ interface AppState {
         laborCostPerUnit: number; // R$ per bag
         packagingCostPerUnit: number; // R$ per bag
         transportCostPerBag: number; // R$ per bag
+        cmvRate: number; // %
+        fixedLaborCost: number; // R$
     };
     updateDreSettings: (settings: {
         taxRate: number;
         laborCostPerUnit: number;
         packagingCostPerUnit: number;
-        transportCostPerBag: number
+        transportCostPerBag: number;
+        cmvRate: number;
+        fixedLaborCost: number;
     }) => void;
 
     // Initialization
@@ -1300,6 +1304,8 @@ export const useAppStore = create<AppState>()(
             laborCostPerUnit: 0.50, // R$ 0,50 por saco (exemplo)
             packagingCostPerUnit: 1.20, // R$ 1,20 por saco (exemplo)
             transportCostPerBag: 2.00, // R$ 2,00 por saco (exemplo)
+            cmvRate: 40,
+            fixedLaborCost: 0
         },
 
         updateDreSettings: (settings) => set(() => ({

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type UserRole, PERMISSIONS } from '../types';
-import { Plus, Trash2, Shield, User as UserIcon, RefreshCw, Edit } from 'lucide-react';
+import { Plus, Trash2, Edit, Shield, User as UserIcon, RefreshCw, X } from 'lucide-react';
 import { AdminAuthModal } from '../components/AdminAuthModal';
 import clsx from 'clsx';
 
@@ -198,8 +198,16 @@ export const Users = () => {
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl">
-                        <h2 className="text-xl font-bold text-white mb-6">{currentUserId ? 'Editar Usuário' : 'Novo Usuário'}</h2>
+                    <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-white">{currentUserId ? 'Editar Usuário' : 'Novo Usuário'}</h2>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType, type Location } from '../types';
-import { Package, ArrowRightLeft, Truck } from 'lucide-react';
+import { Package, ArrowRightLeft, X } from 'lucide-react';
 import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Inventory = () => {
@@ -102,11 +102,14 @@ export const Inventory = () => {
             {isTransferModalOpen && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="glass-panel p-6 rounded-2xl w-full max-w-md shadow-2xl border border-white/10">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-3 bg-emerald-500/20 rounded-full">
-                                <Truck className="w-6 h-6 text-emerald-400" />
-                            </div>
-                            <h3 className="text-xl font-bold text-white">Transferir Estoque</h3>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-white">Transferência de Estoque</h2>
+                            <button
+                                onClick={() => setIsTransferModalOpen(false)}
+                                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
 
                         <form onSubmit={handleTransfer} className="space-y-4">

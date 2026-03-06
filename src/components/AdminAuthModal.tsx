@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Lock, AlertCircle } from 'lucide-react';
+import { Lock, AlertCircle, X } from 'lucide-react';
 import clsx from 'clsx';
 
 interface AdminAuthModalProps {
@@ -58,19 +58,25 @@ export const AdminAuthModal = ({ isOpen, onClose, onConfirm, actionType }: Admin
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-red-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
-                <div className="flex flex-col items-center mb-6 text-center">
-                    <div className="p-3 bg-red-500/10 rounded-full mb-4">
-                        <Lock className="w-8 h-8 text-red-500" />
+            <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl shadow-2xl relative w-full max-w-sm">
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-red-500/20 rounded-lg">
+                        <Lock className="w-5 h-5 text-red-500" />
                     </div>
                     <h2 className="text-xl font-bold text-white">Autorização Necessária</h2>
-                    <p className={clsx(
-                        "text-sm mt-2 font-medium",
-                        actionType === 'Restore' ? "text-red-400" : "text-slate-400"
-                    )}>
-                        {getWarningMessage()}
-                    </p>
                 </div>
+                <p className={clsx(
+                    "text-sm mt-2 font-medium",
+                    actionType === 'Restore' ? "text-red-400" : "text-slate-400"
+                )}>
+                    {getWarningMessage()}
+                </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Search, TrendingUp, DollarSign, Calendar, ArrowUpRight, ArrowDownLeft, Printer, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, TrendingUp, DollarSign, Calendar, ArrowUpRight, ArrowDownLeft, Printer, Edit, Trash2, X } from 'lucide-react';
 import { type FinancialTransaction, type TransactionCategory, type Location } from '../types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { AdminAuthModal } from '../components/AdminAuthModal';
@@ -379,8 +379,16 @@ export const Financeiro = () => {
             {/* New Transaction Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
-                        <h2 className="text-xl font-bold text-white mb-4">Nova Transação</h2>
+                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-white">Nova Transação</h2>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="flex gap-4 p-1 bg-slate-950 rounded-lg">
                                 <button

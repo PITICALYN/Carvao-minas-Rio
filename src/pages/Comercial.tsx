@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Search, MapPin, Phone, Mail, FileText, DollarSign, Edit, Trash2, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Plus, Search, MapPin, Phone, Mail, FileText, DollarSign, Edit, Trash2, ShieldAlert, ShieldCheck, X } from 'lucide-react';
 import { type Customer, type PriceTable } from '../types';
 import { AdminAuthModal } from '../components/AdminAuthModal';
 import clsx from 'clsx';
@@ -363,8 +363,16 @@ export const Comercial = () => {
             {/* Add Customer Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
-                        <h2 className="text-xl font-bold text-white mb-4">{currentCustomerId ? 'Editar Cliente' : 'Novo Cliente'}</h2>
+                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-white">{currentCustomerId ? 'Editar Cliente' : 'Novo Cliente'}</h2>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
                         <form onSubmit={handleCustomerSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-300 mb-1">Nome / Razão Social</label>
@@ -498,8 +506,16 @@ export const Comercial = () => {
             {/* Add Price Table Modal */}
             {isPriceModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
-                        <h2 className="text-xl font-bold text-white mb-4">{currentPriceTableId ? 'Editar Tabela' : 'Nova Tabela de Preço'}</h2>
+                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-white">{currentPriceTableId ? 'Editar Tabela' : 'Nova Tabela de Preço'}</h2>
+                            <button
+                                onClick={() => setIsPriceModalOpen(false)}
+                                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
                         <form onSubmit={handlePriceTableSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-300 mb-1">Nome da Tabela</label>
