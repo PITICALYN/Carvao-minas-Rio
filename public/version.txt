@@ -1,0 +1,4 @@
+Versão: v1.0.2
+Data do Deploy: 06/03/2026 - 00:43 (Brasília)
+Commit: 37e23b6 (e sucessores)
+Status: Produção
