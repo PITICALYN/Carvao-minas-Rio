@@ -370,14 +370,16 @@ export const Production = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="glass-panel p-6 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto border border-white/10 relative">
+                        <button
+                            onClick={() => setIsModalOpen(false)}
+                            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors z-10"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-white">Nova Produção</h3>
-                            <button
-                                onClick={() => setIsModalOpen(false)}
-                                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
+                            <h3 className="text-xl font-bold text-white">
+                                {currentBatchId ? 'Editar Produção' : 'Nova Produção'}
+                            </h3>
                         </div>
                         <form onSubmit={handleSubmit} className="space-y-6">
 

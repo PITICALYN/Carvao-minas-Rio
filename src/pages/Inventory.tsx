@@ -102,14 +102,14 @@ export const Inventory = () => {
             {isTransferModalOpen && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="glass-panel p-6 rounded-2xl w-full max-w-md shadow-2xl border border-white/10">
+                        <button
+                            onClick={() => setIsTransferModalOpen(false)}
+                            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors z-10"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-white">Transferência de Estoque</h2>
-                            <button
-                                onClick={() => setIsTransferModalOpen(false)}
-                                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
                         </div>
 
                         <form onSubmit={handleTransfer} className="space-y-4">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Search, Truck, Calendar, Package, ArrowRight, Printer, CheckCircle, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Truck, Calendar, Package, ArrowRight, Printer, CheckCircle, Edit, Trash2, X } from 'lucide-react';
 import { type Driver, type Shipment, type ProductType, type Location } from '../types';
 import { AdminAuthModal } from '../components/AdminAuthModal';
 
@@ -541,8 +541,16 @@ export const Expedicao = () => {
             {/* Add Shipment Modal */}
             {isShipmentModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-                        <h2 className="text-xl font-bold text-white mb-4">Nova Carga</h2>
+                    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar relative">
+                        <button
+                            onClick={() => setIsShipmentModalOpen(false)}
+                            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors z-10"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-white">Nova Carga</h2>
+                        </div>
                         <form onSubmit={handleShipmentSubmit} className="space-y-4">
 
                             {/* Type Selector */}
