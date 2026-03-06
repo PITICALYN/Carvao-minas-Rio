@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Download, Upload, AlertTriangle, Save, RefreshCw, DollarSign } from 'lucide-react';
+import { Download, Upload, AlertTriangle, Save, RefreshCw, DollarSign, Image } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { AdminAuthModal } from '../components/AdminAuthModal';
 
@@ -303,6 +303,64 @@ export const Settings = () => {
                         <Save className="w-4 h-4" />
                         Salvar Configurações
                     </button>
+                </div>
+            </div>
+
+            {/* Branding Configuration */}
+            <div className="glass-card p-6 rounded-2xl border border-white/5 mt-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 rounded-xl bg-purple-500/20 text-purple-400">
+                        <Image className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-white">Personalização da Marca</h3>
+                        <p className="text-sm text-slate-400">Altere o logo e o título do sistema exibidos no menu lateral.</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">URL do Logo (Imagem)</label>
+                        <input
+                            type="text"
+                            value={store.systemSettings?.logoUrl}
+                            onChange={(e) => store.updateSystemSettings({
+                                ...store.systemSettings,
+                                logoUrl: e.target.value
+                            })}
+                            className="w-full input-field px-4 py-2"
+                            placeholder="Ex: /logo.jpg ou URL externa"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">A imagem será exibida em formato redondo.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Título do Sistema</label>
+                        <input
+                            type="text"
+                            value={store.systemSettings?.title}
+                            onChange={(e) => store.updateSystemSettings({
+                                ...store.systemSettings,
+                                title: e.target.value
+                            })}
+                            className="w-full input-field px-4 py-2"
+                            placeholder="Ex: Gestão Minas Rio"
+                        />
+                    </div>
+                </div>
+
+                <div className="mt-6 flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5">
+                    <div className="h-16 w-16 rounded-full border-2 border-emerald-500/20 overflow-hidden shadow-lg">
+                        <img
+                            src={store.systemSettings?.logoUrl}
+                            alt="Preview"
+                            className="h-full w-full object-cover"
+                        />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-white">{store.systemSettings?.title}</p>
+                        <p className="text-xs text-slate-500">Visualização prévia do menu lateral</p>
+                    </div>
                 </div>
             </div>
         </div>

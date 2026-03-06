@@ -115,8 +115,12 @@ export const Layout = () => {
                 isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
             )}>
                 <div className="p-8 flex flex-col items-center">
-                    <img src="/logo.jpg" alt="Minas Rio" className="h-24 w-auto mb-2 rounded-lg" />
-                    <p className="text-xs text-slate-400">Gestão Inteligente</p>
+                    <img
+                        src={useAppStore.getState().systemSettings.logoUrl}
+                        alt="Logo"
+                        className="h-24 w-24 mb-2 rounded-full border-2 border-emerald-500/20 object-cover shadow-xl"
+                    />
+                    <p className="text-sm font-bold text-white text-center">{useAppStore.getState().systemSettings.title}</p>
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">

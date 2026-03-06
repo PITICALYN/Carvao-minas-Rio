@@ -93,14 +93,14 @@ interface AppState {
         cmvRate: number; // %
         fixedLaborCost: number; // R$
     };
-    updateDreSettings: (settings: {
-        taxRate: number;
-        laborCostPerUnit: number;
-        packagingCostPerUnit: number;
-        transportCostPerBag: number;
-        cmvRate: number;
-        fixedLaborCost: number;
-    }) => void;
+    updateDreSettings: (settings: any) => void;
+
+    // System Settings (Branding)
+    systemSettings: {
+        logoUrl: string;
+        title: string;
+    };
+    updateSystemSettings: (settings: { logoUrl: string; title: string }) => Promise<void>;
 
     // Initialization
     initialize: () => Promise<void>;
@@ -174,6 +174,12 @@ export const useAppStore = create<AppState>()(
                     Factory: { '3kg': 0, '5kg': 0, 'Paulistao': 0, 'Bulk': 0 },
                     Itaguai: { '3kg': 0, '5kg': 0, 'Paulistao': 0, 'Bulk': 0 },
                 };
+
+                // Fetch System Settings
+                const { data: appSettings } = await supabase.from('app_settings').select('*').eq('key', 'branding').single();
+                if (appSettings) {
+                    set({ systemSettings: appSettings.value });
+                }
 
                 inventoryData?.forEach((item: { location: string; stock: any }) => {
                     inventory[item.location as Location] = item.stock;
@@ -1332,5 +1338,18 @@ export const useAppStore = create<AppState>()(
             dreSettings: settings
         })),
 
+        // Branding Actions
+        systemSettings: {
+            logoUrl: '/logo.jpg',
+            title: 'Gestão Inteligente'
+        },
+
+        updateSystemSettings: async (settings) => {
+            set({ systemSettings: settings });
+            await supabase.from('app_settings').upsert({
+                key: 'branding',
+                value: settings
+            }, { onConflict: 'key' });
+        }
     })
 );
