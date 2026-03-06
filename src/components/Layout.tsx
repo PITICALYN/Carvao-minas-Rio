@@ -287,6 +287,9 @@ export const Layout = () => {
                         <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
                         <span className="font-medium">Sair</span>
                     </button>
+                    <div className="mt-4 text-[10px] text-slate-600 text-center border-t border-white/5 pt-2">
+                        v1.0.2 - {new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
                 </div>
             </aside>
 
@@ -300,7 +303,13 @@ export const Layout = () => {
             {/* Change Password Modal */}
             {isChangePasswordOpen && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+                    <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+                        <button
+                            onClick={() => setIsChangePasswordOpen(false)}
+                            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                         <h2 className="text-xl font-bold text-white mb-6">Alterar Senha</h2>
                         <form onSubmit={handleChangePassword} className="space-y-4">
                             <div>

@@ -187,7 +187,7 @@ export const useAppStore = create<AppState>()(
 
                 set({
                     suppliers: suppliers || [],
-                    customers: customers?.map(c => ({
+                    customers: customers?.map((c: any) => ({
                         ...c,
                         creditLimit: Number(c.credit_limit),
                         priceTableId: c.price_table_id,
@@ -196,7 +196,7 @@ export const useAppStore = create<AppState>()(
                     priceTables: priceTables || [],
                     productionBatches: productionBatches || [],
                     sales: sales || [],
-                    transactions: transactions?.map(t => ({
+                    transactions: transactions?.map((t: any) => ({
                         ...t,
                         amount: Number(t.amount),
                         entityId: t.entity_id,
@@ -204,27 +204,27 @@ export const useAppStore = create<AppState>()(
                         dueDate: t.due_date
                     })) || [],
                     drivers: drivers || [],
-                    shipments: shipments?.map(s => ({
+                    shipments: shipments?.map((s: any) => ({
                         ...s,
                         salesIds: s.sales_ids,
                         sourceLocation: s.source_location,
                         destinationLocation: s.destination_location
                     })) || [],
-                    purchaseOrders: purchaseOrders?.map(po => ({
+                    purchaseOrders: purchaseOrders?.map((po: any) => ({
                         ...po,
                         supplierId: po.supplier_id,
                         totalAmount: Number(po.total_amount),
                         manifestNumber: po.manifest_number,
                         originAuthorizationNumber: po.origin_authorization_number
                     })) || [],
-                    auditLogs: auditLogs?.map(log => ({
+                    auditLogs: auditLogs?.map((log: any) => ({
                         ...log,
                         userId: log.user_id,
                         userName: log.user_name,
                         entityId: log.entity_id
                     })) || [],
                     inventory,
-                    users: users?.map(u => ({
+                    users: users?.map((u: any) => ({
                         ...u,
                         canPrint: u.can_print
                     })) || []
