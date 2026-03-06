@@ -15,6 +15,27 @@ export const Users = () => {
     const [pendingAction, setPendingAction] = useState<'Edit' | 'Delete' | 'Reset' | null>(null);
     const [userToActOn, setUserToActOn] = useState<any | null>(null);
 
+    // Permission Translations
+    const permissionLabels: Record<string, string> = {
+        VIEW_DASHBOARD: 'Ver Dashboard',
+        VIEW_SALES: 'Ver Vendas',
+        MANAGE_SALES: 'Gerenciar Vendas',
+        VIEW_PRODUCTION: 'Ver Produção',
+        MANAGE_PRODUCTION: 'Gerenciar Produção',
+        VIEW_INVENTORY: 'Ver Estoque',
+        MANAGE_INVENTORY: 'Gerenciar Estoque',
+        VIEW_FINANCIAL: 'Ver Financeiro',
+        MANAGE_FINANCIAL: 'Gerenciar Financeiro',
+        VIEW_COMMERCIAL: 'Ver Comercial',
+        MANAGE_COMMERCIAL: 'Gerenciar Comercial',
+        MANAGE_PRICES: 'Gerenciar Preços',
+        VIEW_USERS: 'Ver Usuários',
+        MANAGE_USERS: 'Gerenciar Usuários',
+        VIEW_REPORTS: 'Ver Relatórios',
+        MANAGE_SETTINGS: 'Gerenciar Configurações',
+        VIEW_AUDIT: 'Ver Auditoria'
+    };
+
     // Form State
     const [name, setName] = useState('');
     const [username, setUsername] = useState('');
@@ -329,7 +350,7 @@ export const Users = () => {
                                                 className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900"
                                             />
                                             <label htmlFor={`perm-${value}`} className="text-xs text-slate-300 select-none cursor-pointer">
-                                                {key.replace('VIEW_', 'Ver ').replace('MANAGE_', 'Gerenciar ').replace('_', ' ')}
+                                                {permissionLabels[key] || key.replace('VIEW_', 'Ver ').replace('MANAGE_', 'Gerenciar ').replace('_', ' ')}
                                             </label>
                                         </div>
                                     ))}
