@@ -288,7 +288,7 @@ export const Layout = () => {
                         <span className="font-medium">Sair</span>
                     </button>
                     <div className="mt-4 text-[10px] text-slate-600 text-center border-t border-white/5 pt-2">
-                        v1.0.2 - {new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        v1.0.2 - {new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} (Reset)
                     </div>
                 </div>
             </aside>
