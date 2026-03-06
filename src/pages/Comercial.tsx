@@ -188,12 +188,14 @@ export const Comercial = () => {
                     >
                         Clientes
                     </button>
-                    <button
-                        onClick={() => setActiveTab('prices')}
-                        className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'prices' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}
-                    >
-                        Tabelas de Preço
-                    </button>
+                    {(currentUser?.role === 'Admin' || currentUser?.role === 'Director' || currentUser?.role === 'Financial' || currentUser?.permissions.includes('manage_prices')) && (
+                        <button
+                            onClick={() => setActiveTab('prices')}
+                            className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'prices' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}
+                        >
+                            Tabelas de Preço
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -300,7 +302,7 @@ export const Comercial = () => {
                 </>
             )}
 
-            {activeTab === 'prices' && (
+            {activeTab === 'prices' && (currentUser?.role === 'Admin' || currentUser?.role === 'Director' || currentUser?.role === 'Financial' || currentUser?.permissions.includes('manage_prices')) && (
                 <>
                     <div className="flex justify-end mb-6">
                         <button
@@ -315,7 +317,7 @@ export const Comercial = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {priceTables.map(table => (
                             <div key={table.id} className="glass-card p-5 rounded-xl space-y-4 relative group">
-                                {(currentUser?.role === 'Admin' || currentUser?.permissions.includes('manage_prices')) && (
+                                {(currentUser?.role === 'Admin' || currentUser?.role === 'Director' || currentUser?.role === 'Financial' || currentUser?.permissions.includes('manage_prices')) && (
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={() => requestAction('PriceTable', 'Edit', table)}

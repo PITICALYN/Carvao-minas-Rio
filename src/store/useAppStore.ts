@@ -652,6 +652,15 @@ export const useAppStore = create<AppState>()(
         },
 
         addPriceTable: async (priceTable) => {
+            const state = get();
+            state.logAction(
+                state.currentUser?.id || 'system',
+                state.currentUser?.name || 'System',
+                'Create',
+                'Product',
+                `Created Price Table: ${priceTable.name}`,
+                priceTable.id
+            );
             set((state) => ({
                 priceTables: [...state.priceTables, priceTable]
             }));
@@ -665,7 +674,7 @@ export const useAppStore = create<AppState>()(
                 state.currentUser?.name || 'System',
                 'Update',
                 'Product',
-                `Updated Price Table: ${updatedTable.name}`,
+                `Updated Price Table: ${updatedTable.name} (Prices: ${JSON.stringify(updatedTable.prices)})`,
                 updatedTable.id
             );
             set((state) => ({
