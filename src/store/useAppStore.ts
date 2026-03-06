@@ -87,10 +87,16 @@ interface AppState {
     // Settings
     dreSettings: {
         taxRate: number; // %
-        cmvRate: number; // % (Fallback if no real data)
-        fixedLaborCost: number; // R$
+        laborCostPerUnit: number; // R$ per bag
+        packagingCostPerUnit: number; // R$ per bag
+        transportCostPerBag: number; // R$ per bag
     };
-    updateDreSettings: (settings: { taxRate: number; cmvRate: number; fixedLaborCost: number }) => void;
+    updateDreSettings: (settings: {
+        taxRate: number;
+        laborCostPerUnit: number;
+        packagingCostPerUnit: number;
+        transportCostPerBag: number
+    }) => void;
 
     // Initialization
     initialize: () => Promise<void>;
@@ -395,12 +401,29 @@ export const useAppStore = create<AppState>()(
             if (sale.customerName) {
                 const customer = state.customers.find(c => c.name === sale.customerName);
                 if (customer) {
+                    // 1. Check if explicitly blocked
+                    if (customer.isBlocked) {
+                        throw new Error(`Cliente BLOQUEADO: ${customer.blockedReason || 'Motivo não especificado'}. Procure a diretoria.`);
+                    }
+
+                    // 2. Check for Overdue Transactions
+                    const hasOverdue = state.transactions.some(t =>
+                        t.entityId === customer.id &&
+                        t.type === 'Income' &&
+                        t.status === 'Overdue'
+                    );
+
+                    if (hasOverdue) {
+                        throw new Error(`Venda Não Autorizada: Cliente possui pendências em ATRASO no financeiro.`);
+                    }
+
+                    // 3. Check Credit Limit
                     const currentDebt = state.transactions
                         .filter(t => t.entityId === customer.id && t.type === 'Income' && t.status !== 'Paid')
                         .reduce((acc, t) => acc + t.amount, 0);
 
-                    if (currentDebt + sale.totalAmount > customer.creditLimit) {
-                        throw new Error(`Limite de crédito excedido! Disponível: R$ ${(customer.creditLimit - currentDebt).toLocaleString()}`);
+                    if (currentDebt + sale.totalAmount > (customer.creditLimit || 0)) {
+                        throw new Error(`Limite de crédito excedido! Total devido com esta venda: R$ ${(currentDebt + sale.totalAmount).toLocaleString()}. Limite: R$ ${(customer.creditLimit || 0).toLocaleString()}`);
                     }
                 }
             }
@@ -1273,9 +1296,10 @@ export const useAppStore = create<AppState>()(
 
         // Settings
         dreSettings: {
-            taxRate: 6, // Default 6% (Simples Nacional approx)
-            cmvRate: 40, // Default 40%
-            fixedLaborCost: 0
+            taxRate: 6,
+            laborCostPerUnit: 0.50, // R$ 0,50 por saco (exemplo)
+            packagingCostPerUnit: 1.20, // R$ 1,20 por saco (exemplo)
+            transportCostPerBag: 2.00, // R$ 2,00 por saco (exemplo)
         },
 
         updateDreSettings: (settings) => set(() => ({

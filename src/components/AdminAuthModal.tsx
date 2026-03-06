@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Lock, AlertCircle } from 'lucide-react';
+import clsx from 'clsx';
 
 interface AdminAuthModalProps {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: () => void;
-    actionType: 'Edit' | 'Delete';
+    actionType: 'Edit' | 'Delete' | 'Backup' | 'Restore';
 }
 
 export const AdminAuthModal = ({ isOpen, onClose, onConfirm, actionType }: AdminAuthModalProps) => {
@@ -16,21 +17,42 @@ export const AdminAuthModal = ({ isOpen, onClose, onConfirm, actionType }: Admin
 
     if (!isOpen) return null;
 
+    const getActionLabel = () => {
+        switch (actionType) {
+            case 'Edit': return 'Edição';
+            case 'Delete': return 'Exclusão';
+            case 'Backup': return 'Exportação de Backup';
+            case 'Restore': return 'Restauração de Dados';
+            default: return actionType;
+        }
+    };
+
+    const getWarningMessage = () => {
+        if (actionType === 'Restore') {
+            return "ALERTA CRÍTICO: Esta ação substituirá TODOS os dados atuais do sistema pela versão do backup. Esta operação é irreversível.";
+        }
+        if (actionType === 'Backup') {
+            return "Confirme sua identidade para gerar e baixar o arquivo de backup completo.";
+        }
+        return `Esta ação de ${getActionLabel()} requer permissão de administrador ou diretoria.`;
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Find the admin user (assuming there's always an admin with role 'Admin')
-        // In a real app, we might check against the specific admin user's password or a global admin password
-        // Here we check if ANY user with role 'Admin' has this password
-        const adminUser = users.find(u => u.role === 'Admin' && u.password === password);
+        // Check if user is Admin or Director and password matches
+        const authorizedUser = users.find(u =>
+            (u.role === 'Admin' || u.role === 'Director') &&
+            u.password === password
+        );
 
-        if (adminUser) {
+        if (authorizedUser) {
             onConfirm();
             onClose();
             setPassword('');
             setError('');
         } else {
-            setError('Senha de administrador incorreta.');
+            setError('Senha incorreta ou usuário sem permissão.');
         }
     };
 
@@ -42,8 +64,11 @@ export const AdminAuthModal = ({ isOpen, onClose, onConfirm, actionType }: Admin
                         <Lock className="w-8 h-8 text-red-500" />
                     </div>
                     <h2 className="text-xl font-bold text-white">Autorização Necessária</h2>
-                    <p className="text-slate-400 text-sm mt-2">
-                        Esta ação de <span className="font-bold text-red-400">{actionType === 'Edit' ? 'Edição' : 'Exclusão'}</span> requer permissão de administrador.
+                    <p className={clsx(
+                        "text-sm mt-2 font-medium",
+                        actionType === 'Restore' ? "text-red-400" : "text-slate-400"
+                    )}>
+                        {getWarningMessage()}
                     </p>
                 </div>
 

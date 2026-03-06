@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType, type Location, type Sale } from '../types';
-import { Plus, Edit, Trash2, Printer, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Printer, X, ShieldAlert, AlertCircle } from 'lucide-react';
 import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Sales = () => {
@@ -14,6 +14,7 @@ export const Sales = () => {
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [pendingAction, setPendingAction] = useState<'Edit' | 'Delete' | null>(null);
     const [saleToActOn, setSaleToActOn] = useState<Sale | null>(null);
+    const [blockedError, setBlockedError] = useState<string | null>(null);
 
     // Form State
     const [location, setLocation] = useState<Location>(currentUser?.role === 'Itaguai' ? 'Itaguai' : 'Factory');
@@ -92,7 +93,12 @@ export const Sales = () => {
             setCustomerName('');
             setItems([{ type: '3kg', qty: '', price: '' }]);
         } catch (error) {
-            alert(error instanceof Error ? error.message : 'Erro ao realizar venda');
+            const msg = error instanceof Error ? error.message : 'Erro ao realizar venda';
+            if (msg.includes('BLOQUEADO') || msg.includes('ATRASO') || msg.includes('Limite de crédito')) {
+                setBlockedError(msg);
+            } else {
+                alert(msg);
+            }
         }
     };
 
@@ -182,7 +188,7 @@ export const Sales = () => {
                     <tbody className="divide-y divide-white/5">
                         {sales
                             .filter(sale => {
-                                if (currentUser?.role === 'Admin') return true;
+                                if (currentUser?.role === 'Admin' || currentUser?.role === 'Director' || currentUser?.role === 'Seller' || currentUser?.role === 'Financial') return true;
                                 if (currentUser?.role === 'Factory') return sale.location === 'Factory';
                                 if (currentUser?.role === 'Itaguai') return sale.location === 'Itaguai';
                                 return false;
@@ -300,6 +306,38 @@ export const Sales = () => {
                                 )}
                             </div>
 
+                            {customerName && (() => {
+                                const customer = customers.find(c => c.name === customerName);
+                                if (!customer) return null;
+                                const currentDebt = useAppStore.getState().transactions
+                                    .filter(t => t.entityId === customer.id && t.type === 'Income' && t.status !== 'Paid')
+                                    .reduce((acc, t) => acc + t.amount, 0);
+
+                                const hasOverdue = useAppStore.getState().transactions.some(t =>
+                                    t.entityId === customer.id && t.type === 'Income' && t.status === 'Overdue'
+                                );
+
+                                return (
+                                    <div className="space-y-3">
+                                        {(customer.isBlocked || hasOverdue) && (
+                                            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex gap-3 items-start animate-pulse">
+                                                <ShieldAlert className="w-5 h-5 text-red-500 shrink-0" />
+                                                <div>
+                                                    <p className="text-sm font-bold text-red-500">CLIENTE COM RESTRIÇÃO</p>
+                                                    <p className="text-xs text-red-500/80">
+                                                        {customer.isBlocked ? `Bloqueado: ${customer.blockedReason}` : 'Possui parcelas em atraso.'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 flex justify-between items-center text-xs">
+                                            <span className="text-slate-400">Dívida Acumulada:</span>
+                                            <span className="font-bold text-blue-400">R$ {currentDebt.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                             <div>
                                 <label className="block text-sm font-medium text-slate-300 mb-1">Cliente (Opcional)</label>
                                 <input
@@ -381,6 +419,29 @@ export const Sales = () => {
                                     R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </p>
                             </div>
+
+                            {blockedError && (
+                                <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-xl space-y-3">
+                                    <div className="flex gap-3">
+                                        <AlertCircle className="w-6 h-6 text-red-400 shrink-0" />
+                                        <p className="text-sm text-red-200 font-medium">{blockedError}</p>
+                                    </div>
+                                    <p className="text-xs text-red-300/70">Venda bloqueada automaticamente. Somente um **Diretor** ou **Admin** pode autorizar esta operação mediante alteração do limite no cadastro.</p>
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setBlockedError(null);
+                                                setAuthModalOpen(true);
+                                                setPendingAction('Edit');
+                                            }}
+                                            className="text-xs font-bold text-red-400 hover:text-red-300 underline"
+                                        >
+                                            Solicitar Autorização de Diretor
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="flex justify-end gap-3 pt-2">
                                 <button

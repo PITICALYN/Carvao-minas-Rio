@@ -71,7 +71,7 @@ export interface Sale {
     timestamp: number;
 }
 
-export type UserRole = 'Admin' | 'Factory' | 'Itaguai';
+export type UserRole = 'Admin' | 'Factory' | 'Itaguai' | 'Production' | 'Seller' | 'Financial' | 'Director';
 
 export interface User {
     id: string;
@@ -93,6 +93,9 @@ export const PERMISSIONS = {
     MANAGE_INVENTORY: 'manage_inventory', // Transfers
     VIEW_FINANCIAL: 'view_financial',
     MANAGE_FINANCIAL: 'manage_financial',
+    VIEW_COMMERCIAL: 'view_commercial',
+    MANAGE_COMMERCIAL: 'manage_commercial',
+    MANAGE_PRICES: 'manage_prices',
     VIEW_USERS: 'view_users',
     MANAGE_USERS: 'manage_users',
     VIEW_REPORTS: 'view_reports',
@@ -111,6 +114,8 @@ export interface Customer {
     creditLimit: number;
     paymentTerms: string;
     priceTableId?: string;
+    isBlocked?: boolean;
+    blockedReason?: string;
 }
 
 export interface PriceTable {

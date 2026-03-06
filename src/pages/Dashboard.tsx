@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
+import clsx from 'clsx';
 import { useAppStore } from '../store/useAppStore';
-import { Package, AlertTriangle, DollarSign, Printer, TrendingUp, Users, Factory } from 'lucide-react';
+import { Package, AlertTriangle, DollarSign, Printer, TrendingUp, Users, Factory, Settings, PieChart as PieChartIcon, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import {
     AreaChart,
     Area,
@@ -43,6 +44,158 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         );
     }
     return null;
+};
+
+const DreManagement = () => {
+    const { sales, transactions, dreSettings, updateDreSettings, currentUser } = useAppStore();
+    const [isConfigOpen, setIsConfigOpen] = React.useState(false);
+    const [tempSettings, setTempSettings] = React.useState(dreSettings);
+
+    const totalRevenue = useMemo(() => sales.reduce((acc, s) => acc + s.totalAmount, 0), [sales]);
+
+    // Detailed DRE Calculations
+    const totalBagsSold = useMemo(() => {
+        return sales.reduce((acc, sale) => {
+            return acc + sale.items.reduce((itemAcc, item) => itemAcc + (item.productType === 'Bulk' ? 0 : item.quantity), 0);
+        }, 0);
+    }, [sales]);
+
+    const taxes = totalRevenue * (dreSettings.taxRate / 100);
+    const laborCosts = totalBagsSold * dreSettings.laborCostPerUnit;
+    const packagingCosts = totalBagsSold * dreSettings.packagingCostPerUnit;
+    const transportCosts = totalBagsSold * dreSettings.transportCostPerBag;
+
+    // Purchases (CMV equivalent for this simple model)
+    const rawMaterialCosts = transactions
+        .filter(t => t.category === 'Purchase' && t.type === 'Expense')
+        .reduce((acc, t) => acc + t.amount, 0);
+
+    const otherExpenses = transactions
+        .filter(t => t.category === 'Operational' && t.type === 'Expense')
+        .reduce((acc, t) => acc + t.amount, 0);
+
+    const totalCosts = taxes + laborCosts + packagingCosts + transportCosts + rawMaterialCosts + otherExpenses;
+    const netProfit = totalRevenue - totalCosts;
+    const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+
+    const handleSaveSettings = () => {
+        updateDreSettings(tempSettings);
+        setIsConfigOpen(false);
+    };
+
+    return (
+        <div className="glass-card p-6 rounded-2xl border border-white/5 space-y-6">
+            <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <PieChartIcon className="w-5 h-5 text-indigo-400" />
+                    <h3 className="text-lg font-bold text-white">DRE Gerencial</h3>
+                </div>
+                {(currentUser?.role === 'Admin' || currentUser?.role === 'Director' || currentUser?.role === 'Financial') && (
+                    <button
+                        onClick={() => setIsConfigOpen(!isConfigOpen)}
+                        className="p-2 hover:bg-white/5 rounded-lg transition-colors text-slate-400"
+                        title="Configurar Custos"
+                    >
+                        <Settings className="w-5 h-5" />
+                    </button>
+                )}
+            </div>
+
+            {isConfigOpen && (
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                    <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">Imposto Médio (%)</label>
+                        <input
+                            type="number"
+                            value={tempSettings.taxRate}
+                            onChange={e => setTempSettings({ ...tempSettings, taxRate: Number(e.target.value) })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">Mão de Obra (R$/saco)</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            value={tempSettings.laborCostPerUnit}
+                            onChange={e => setTempSettings({ ...tempSettings, laborCostPerUnit: Number(e.target.value) })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">Embalagem (R$/saco)</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            value={tempSettings.packagingCostPerUnit}
+                            onChange={e => setTempSettings({ ...tempSettings, packagingCostPerUnit: Number(e.target.value) })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">Transporte (R$/saco)</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            value={tempSettings.transportCostPerBag}
+                            onChange={e => setTempSettings({ ...tempSettings, transportCostPerBag: Number(e.target.value) })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                    </div>
+                    <div className="md:col-span-2 flex justify-end gap-2 pt-2">
+                        <button onClick={() => setIsConfigOpen(false)} className="px-3 py-1.5 text-xs text-slate-400 hover:text-white">Cancelar</button>
+                        <button onClick={handleSaveSettings} className="px-4 py-1.5 text-xs bg-indigo-600 text-white rounded-lg font-bold">Salvar Configurações</button>
+                    </div>
+                </div>
+            )}
+
+            <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                    <span className="text-sm font-medium text-emerald-400">Receita Bruta</span>
+                    <span className="text-lg font-bold text-white">R$ {totalRevenue.toLocaleString()}</span>
+                </div>
+
+                <div className="space-y-1 pl-2">
+                    <div className="flex justify-between text-xs text-slate-400 border-b border-white/5 py-1.5">
+                        <span>(-) Impostos ({dreSettings.taxRate}%)</span>
+                        <span className="text-red-400">- R$ {taxes.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-400 border-b border-white/5 py-1.5">
+                        <span>(-) Mão de Obra (R$ {dreSettings.laborCostPerUnit}/sc)</span>
+                        <span className="text-red-400">- R$ {laborCosts.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-400 border-b border-white/5 py-1.5">
+                        <span>(-) Embalagens (R$ {dreSettings.packagingCostPerUnit}/sc)</span>
+                        <span className="text-red-400">- R$ {packagingCosts.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-400 border-b border-white/5 py-1.5">
+                        <span>(-) Transporte (R$ {dreSettings.transportCostPerBag}/sc)</span>
+                        <span className="text-red-400">- R$ {transportCosts.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-400 border-b border-white/5 py-1.5">
+                        <span>(-) Matéria Prima (Compras)</span>
+                        <span className="text-red-400">- R$ {rawMaterialCosts.toLocaleString()}</span>
+                    </div>
+                </div>
+
+                <div className="flex justify-between items-center p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20 mt-4">
+                    <div>
+                        <span className="block text-xs font-medium text-indigo-400 mb-0.5">LUCRO LÍQUIDO</span>
+                        <div className="flex items-center gap-2">
+                            {netProfit >= 0 ? <ArrowUpCircle className="w-5 h-5 text-emerald-500" /> : <ArrowDownCircle className="w-5 h-5 text-red-500" />}
+                            <span className="text-xl font-black text-white">R$ {netProfit.toLocaleString()}</span>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <span className="block text-xs font-medium text-slate-400 mb-0.5">MARGEM</span>
+                        <span className={clsx("text-lg font-bold", netProfit >= 0 ? "text-emerald-400" : "text-red-400")}>
+                            {profitMargin.toFixed(1)}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export const Dashboard = () => {
@@ -303,6 +456,11 @@ export const Dashboard = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* DRE Gerencial Row */}
+            <div className="mt-8">
+                <DreManagement />
             </div>
         </div>
     );

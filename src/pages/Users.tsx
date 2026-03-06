@@ -3,6 +3,7 @@ import { useAppStore } from '../store/useAppStore';
 import { type UserRole, PERMISSIONS } from '../types';
 import { Plus, Trash2, Shield, User as UserIcon, RefreshCw, Edit } from 'lucide-react';
 import { AdminAuthModal } from '../components/AdminAuthModal';
+import clsx from 'clsx';
 
 export const Users = () => {
     const { users, addUser, updateUser, removeUser, currentUser } = useAppStore();
@@ -244,10 +245,48 @@ export const Users = () => {
                                     onChange={e => setRole(e.target.value as UserRole)}
                                     className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
                                 >
-                                    <option value="Factory">Fábrica</option>
-                                    <option value="Itaguai">Itaguaí</option>
-                                    <option value="Admin">Administrador</option>
+                                    <option value="Factory">Fábrica (Operacional)</option>
+                                    <option value="Itaguai">Itaguaí (Operacional)</option>
+                                    <option value="Production">Supervisor de Produção</option>
+                                    <option value="Seller">Vendedor</option>
+                                    <option value="Financial">Financeiro</option>
+                                    <option value="Director">Diretor</option>
+                                    <option value="Admin">Administrador do Sistema</option>
                                 </select>
+                                {role === 'Director' && (
+                                    <p className={clsx(
+                                        "text-[10px] mt-1",
+                                        users.filter(u => u.role === 'Director').length >= 5 ? "text-amber-400" : "text-slate-500"
+                                    )}>
+                                        Limite sugerido: 5 Diretores (Atual: {users.filter(u => u.role === 'Director').length})
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/10">
+                                <div>
+                                    <p className="text-sm font-medium text-white">Permissões Padrão</p>
+                                    <p className="text-[10px] text-slate-400">Aplicar conjunto de permissões para {role}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const defaultPerms: string[] = ['view_dashboard'];
+                                        if (role === 'Admin' || role === 'Director') {
+                                            defaultPerms.push(...Object.values(PERMISSIONS));
+                                        } else if (role === 'Production' || role === 'Factory' || role === 'Itaguai') {
+                                            defaultPerms.push(PERMISSIONS.VIEW_PRODUCTION, PERMISSIONS.MANAGE_PRODUCTION, PERMISSIONS.VIEW_INVENTORY);
+                                        } else if (role === 'Seller') {
+                                            defaultPerms.push(PERMISSIONS.VIEW_SALES, PERMISSIONS.MANAGE_SALES, PERMISSIONS.VIEW_COMMERCIAL);
+                                        } else if (role === 'Financial') {
+                                            defaultPerms.push(PERMISSIONS.VIEW_FINANCIAL, PERMISSIONS.MANAGE_FINANCIAL, PERMISSIONS.VIEW_REPORTS, PERMISSIONS.VIEW_COMMERCIAL, PERMISSIONS.MANAGE_PRICES);
+                                        }
+                                        setPermissions([...new Set(defaultPerms)]);
+                                    }}
+                                    className="text-xs bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-2 py-1 rounded transition-colors border border-emerald-500/20"
+                                >
+                                    Aplicar
+                                </button>
                             </div>
 
                             <div className="flex items-center gap-2">

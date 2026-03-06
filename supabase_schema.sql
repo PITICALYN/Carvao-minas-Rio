@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS customers (
     address TEXT,
     credit_limit DECIMAL(12, 2) DEFAULT 0,
     payment_terms TEXT,
-    price_table_id UUID,
+    price_table_id UUID REFERENCES price_tables(id),
+    is_blocked BOOLEAN DEFAULT FALSE,
+    blocked_reason TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -145,7 +147,7 @@ CREATE TABLE IF NOT EXISTS users_table (
     name TEXT NOT NULL,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
-    role TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('Admin', 'Factory', 'Itaguai', 'Production', 'Seller', 'Financial', 'Director')),
     permissions JSONB NOT NULL,
     can_print BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -153,5 +155,5 @@ CREATE TABLE IF NOT EXISTS users_table (
 
 -- Initial Admin User
 INSERT INTO users_table (id, name, username, password, role, permissions, can_print) VALUES 
-('admin', 'Administrador', 'admin', '123', 'Admin', '["view_dashboard", "view_sales", "manage_sales", "view_production", "manage_production", "view_inventory", "manage_inventory", "view_financial", "manage_financial", "view_users", "manage_users", "view_reports", "manage_settings", "view_audit"]', TRUE)
+('admin', 'Administrador', 'admin', '123', 'Admin', '["view_dashboard", "view_sales", "manage_sales", "view_production", "manage_production", "view_inventory", "manage_inventory", "view_financial", "manage_financial", "view_commercial", "manage_commercial", "manage_prices", "view_users", "manage_users", "view_reports", "manage_settings", "view_audit"]', TRUE)
 ON CONFLICT (id) DO NOTHING;

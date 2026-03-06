@@ -125,15 +125,15 @@ export const Layout = () => {
                     )}
 
                     {/* Commercial & Sales */}
+                    {(hasPermission('view_commercial') || hasPermission('manage_commercial')) && (
+                        <NavItem to="/comercial" icon={Users} label="Comercial" />
+                    )}
                     {(hasPermission('view_sales') || hasPermission('manage_sales')) && (
-                        <>
-                            <NavItem to="/comercial" icon={Users} label="Comercial" />
-                            <NavItem to="/vendas" icon={ShoppingCart} label="Vendas" />
-                        </>
+                        <NavItem to="/vendas" icon={ShoppingCart} label="Vendas" />
                     )}
 
                     {/* Purchasing */}
-                    {hasPermission('manage_inventory') && ( // Assuming purchasing falls under inventory/admin for now or add specific perm
+                    {(hasPermission('manage_inventory') || currentUser?.role === 'Financial') && (
                         <>
                             <NavItem to="/compras" icon={ShoppingBag} label="Compras" />
                             <NavItem to="/suppliers" icon={User} label="Fornecedores" />
@@ -182,7 +182,14 @@ export const Layout = () => {
                         </div>
                         <div>
                             <p className="text-sm font-bold text-white">{currentUser?.name}</p>
-                            <p className="text-xs text-slate-400">{currentUser?.role === 'Admin' ? 'Administrador' : currentUser?.role === 'Factory' ? 'Fábrica' : 'Itaguaí'}</p>
+                            <p className="text-xs text-slate-400">
+                                {currentUser?.role === 'Admin' ? 'Administrador' :
+                                    currentUser?.role === 'Director' ? 'Diretor' :
+                                        currentUser?.role === 'Production' ? 'Produção' :
+                                            currentUser?.role === 'Seller' ? 'Vendedor' :
+                                                currentUser?.role === 'Financial' ? 'Financeiro' :
+                                                    currentUser?.role === 'Factory' ? 'Fábrica' : 'Itaguaí'}
+                            </p>
                         </div>
                     </div>
                     <button

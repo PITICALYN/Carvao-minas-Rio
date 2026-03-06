@@ -300,6 +300,11 @@ export const Production = () => {
                                     </td>
                                     <td className="px-6 py-4 text-sm text-slate-400">
                                         <div className="flex flex-col gap-1">
+                                            {batchInputs.length > 1 && (
+                                                <span className="inline-flex items-center gap-1 w-fit px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold mb-1">
+                                                    MISTO
+                                                </span>
+                                            )}
                                             {batchInputs.map((input: any, idx: number) => {
                                                 const s = suppliers.find(sup => sup.id === input.supplierId);
                                                 return (

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Search, MapPin, Phone, Mail, FileText, DollarSign, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, MapPin, Phone, Mail, FileText, DollarSign, Edit, Trash2, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { type Customer, type PriceTable } from '../types';
 import { AdminAuthModal } from '../components/AdminAuthModal';
+import clsx from 'clsx';
 
 export const Comercial = () => {
     const {
@@ -32,7 +33,9 @@ export const Comercial = () => {
         phone: '',
         address: '',
         creditLimit: 0,
-        paymentTerms: '30 dias'
+        paymentTerms: '30 dias',
+        isBlocked: false,
+        blockedReason: ''
     });
 
     // Price Table Form State
@@ -82,7 +85,17 @@ export const Comercial = () => {
 
     const resetCustomerForm = () => {
         setCurrentCustomerId(null);
-        setNewCustomer({ name: '', document: '', email: '', phone: '', address: '', creditLimit: 0, paymentTerms: '30 dias' });
+        setNewCustomer({
+            name: '',
+            document: '',
+            email: '',
+            phone: '',
+            address: '',
+            creditLimit: 0,
+            paymentTerms: '30 dias',
+            isBlocked: false,
+            blockedReason: ''
+        });
     };
 
 
@@ -206,8 +219,16 @@ export const Comercial = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {customers.map(customer => (
-                            <div key={customer.id} className="glass-card p-5 rounded-xl space-y-4 relative group">
-                                {currentUser?.role === 'Admin' && (
+                            <div key={customer.id} className={clsx(
+                                "glass-card p-5 rounded-xl space-y-4 relative group border",
+                                customer.isBlocked ? "border-red-500/50 bg-red-500/5" : "border-white/10"
+                            )}>
+                                {customer.isBlocked && (
+                                    <div className="absolute -top-2 -right-2 bg-red-600 text-white p-1 rounded-full shadow-lg z-10 animate-pulse">
+                                        <ShieldAlert className="w-5 h-5" />
+                                    </div>
+                                )}
+                                {(currentUser?.role === 'Admin' || currentUser?.role === 'Director' || currentUser?.permissions.includes('manage_commercial')) && (
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={() => requestAction('Customer', 'Edit', customer)}
@@ -231,6 +252,11 @@ export const Comercial = () => {
                                         <p className="text-sm text-slate-400 flex items-center gap-1">
                                             <FileText className="w-3 h-3" /> {customer.document}
                                         </p>
+                                        {customer.isBlocked && (
+                                            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-bold">
+                                                <ShieldAlert className="w-3 h-3" /> BLOQUEADO
+                                            </div>
+                                        )}
                                     </div>
                                     <span className="px-2 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">
                                         Ativo
@@ -289,7 +315,7 @@ export const Comercial = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {priceTables.map(table => (
                             <div key={table.id} className="glass-card p-5 rounded-xl space-y-4 relative group">
-                                {currentUser?.role === 'Admin' && (
+                                {(currentUser?.role === 'Admin' || currentUser?.permissions.includes('manage_prices')) && (
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={() => requestAction('PriceTable', 'Edit', table)}
@@ -413,6 +439,40 @@ export const Comercial = () => {
                                         <option value="60 dias">60 dias</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/5 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium text-slate-300">Status de Bloqueio</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setNewCustomer({ ...newCustomer, isBlocked: !newCustomer.isBlocked })}
+                                        className={clsx(
+                                            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                                            newCustomer.isBlocked
+                                                ? "bg-red-500 text-white"
+                                                : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
+                                        )}
+                                    >
+                                        {newCustomer.isBlocked ? (
+                                            <><ShieldAlert className="w-4 h-4" /> Bloqueado</>
+                                        ) : (
+                                            <><ShieldCheck className="w-4 h-4" /> Ativo</>
+                                        )}
+                                    </button>
+                                </div>
+
+                                {newCustomer.isBlocked && (
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">Motivo do Bloqueio</label>
+                                        <textarea
+                                            value={newCustomer.blockedReason}
+                                            onChange={e => setNewCustomer({ ...newCustomer, blockedReason: e.target.value })}
+                                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white h-20 outline-none focus:ring-1 focus:ring-red-500"
+                                            placeholder="Ex: Pagamento atrasado há mais de 10 dias."
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex justify-end gap-3 mt-6">

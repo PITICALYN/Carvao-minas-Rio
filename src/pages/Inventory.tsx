@@ -82,14 +82,14 @@ export const Inventory = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {(currentUser?.role === 'Admin' || currentUser?.role === 'Factory') && (
+                {(currentUser?.role === 'Admin' || currentUser?.role === 'Director' || currentUser?.role === 'Production' || currentUser?.role === 'Seller' || currentUser?.role === 'Financial' || currentUser?.role === 'Factory') && (
                     <InventoryCard
                         location="Fábrica (Beneficiamento)"
                         items={inventory.Factory}
                         color="text-blue-400"
                     />
                 )}
-                {(currentUser?.role === 'Admin' || currentUser?.role === 'Itaguai') && (
+                {(currentUser?.role === 'Admin' || currentUser?.role === 'Director' || currentUser?.role === 'Production' || currentUser?.role === 'Seller' || currentUser?.role === 'Financial' || currentUser?.role === 'Itaguai') && (
                     <InventoryCard
                         location="Depósito Itaguaí"
                         items={inventory.Itaguai}

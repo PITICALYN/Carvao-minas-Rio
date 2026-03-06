@@ -11,18 +11,23 @@ export const Settings = () => {
 
     // Admin Auth State
     const [authModalOpen, setAuthModalOpen] = useState(false);
-    const [pendingAction, setPendingAction] = useState<'Restore' | 'UpdateDRE' | null>(null);
+    const [pendingAction, setPendingAction] = useState<'Restore' | 'UpdateDRE' | 'Backup' | null>(null);
     const [pendingData, setPendingData] = useState<any>(null);
 
-    if (currentUser?.role !== 'Admin') {
+    if (!(currentUser?.role === 'Admin' || currentUser?.role === 'Director')) {
         return (
             <div className="flex items-center justify-center h-full text-slate-400">
-                Acesso restrito a administradores.
+                Acesso restrito a administradores e diretores.
             </div>
         );
     }
 
     const handleExportBackup = () => {
+        setPendingAction('Backup');
+        setAuthModalOpen(true);
+    };
+
+    const executeExport = () => {
         const wb = XLSX.utils.book_new();
 
         // Helper to add sheet
@@ -53,7 +58,7 @@ export const Settings = () => {
         XLSX.writeFile(wb, `backup_carvoaria_${date}.xlsx`);
     };
 
-    const [localDreSettings, setLocalDreSettings] = useState(store.dreSettings || { taxRate: 6, cmvRate: 40, fixedLaborCost: 0 });
+    const [localDreSettings, setLocalDreSettings] = useState(store.dreSettings || { taxRate: 6, laborCostPerUnit: 0.5, packagingCostPerUnit: 1.2, transportCostPerBag: 2.0 });
 
     const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -116,6 +121,8 @@ export const Settings = () => {
         } else if (pendingAction === 'UpdateDRE') {
             store.updateDreSettings(localDreSettings);
             alert('Configurações salvas com sucesso!');
+        } else if (pendingAction === 'Backup') {
+            executeExport();
         }
 
         setAuthModalOpen(false);
@@ -132,9 +139,12 @@ export const Settings = () => {
         <div className="space-y-8">
             <AdminAuthModal
                 isOpen={authModalOpen}
-                onClose={() => setAuthModalOpen(false)}
+                onClose={() => {
+                    setAuthModalOpen(false);
+                    setPendingAction(null);
+                }}
                 onConfirm={confirmAction}
-                actionType="Edit"
+                actionType={pendingAction === 'UpdateDRE' ? 'Edit' : (pendingAction || 'Edit')}
             />
             <div>
                 <h2 className="text-2xl font-bold text-white">Configurações</h2>
@@ -234,39 +244,54 @@ export const Settings = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">CMV Estimado (%)</label>
-                        <div className="relative">
-                            <input
-                                type="number"
-                                value={localDreSettings.cmvRate}
-                                onChange={(e) => setLocalDreSettings({
-                                    ...localDreSettings,
-                                    cmvRate: Number(e.target.value)
-                                })}
-                                className="w-full input-field px-4 py-2 pr-8"
-                                placeholder="0.00"
-                            />
-                            <span className="absolute right-3 top-2 text-slate-500">%</span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1">Custo de Matéria-prima/Embalagem sobre Vendas.</p>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Mão de Obra Fixa (R$)</label>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Mão de Obra (R$/saco)</label>
                         <div className="relative">
                             <span className="absolute left-3 top-2 text-slate-500">R$</span>
                             <input
                                 type="number"
-                                value={localDreSettings.fixedLaborCost}
+                                step="0.01"
+                                value={localDreSettings.laborCostPerUnit}
                                 onChange={(e) => setLocalDreSettings({
                                     ...localDreSettings,
-                                    fixedLaborCost: Number(e.target.value)
+                                    laborCostPerUnit: Number(e.target.value)
                                 })}
                                 className="w-full input-field px-4 py-2 pl-10"
-                                placeholder="0.00"
                             />
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Adicionado automaticamente às Despesas Operacionais.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Embalagem (R$/saco)</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-2 text-slate-500">R$</span>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={localDreSettings.packagingCostPerUnit}
+                                onChange={(e) => setLocalDreSettings({
+                                    ...localDreSettings,
+                                    packagingCostPerUnit: Number(e.target.value)
+                                })}
+                                className="w-full input-field px-4 py-2 pl-10"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Transporte (R$/saco)</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-2 text-slate-500">R$</span>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={localDreSettings.transportCostPerBag}
+                                onChange={(e) => setLocalDreSettings({
+                                    ...localDreSettings,
+                                    transportCostPerBag: Number(e.target.value)
+                                })}
+                                className="w-full input-field px-4 py-2 pl-10"
+                            />
+                        </div>
                     </div>
                 </div>
 
