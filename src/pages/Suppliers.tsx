@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Plus, User, Phone, Edit, Trash2 } from 'lucide-react';
+import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Suppliers = () => {
     const { suppliers, addSupplier, updateSupplier, removeSupplier, getSupplierStats, currentUser } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Admin Auth State
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<'Edit' | 'Delete' | null>(null);
+    const [supplierToActOn, setSupplierToActOn] = useState<any | null>(null);
+
     const [currentSupplierId, setCurrentSupplierId] = useState<string | null>(null);
     const [newSupplierName, setNewSupplierName] = useState('');
     const [newSupplierContact, setNewSupplierContact] = useState('');
@@ -38,11 +45,33 @@ export const Suppliers = () => {
     };
 
     const handleEdit = (supplier: any) => {
-        setCurrentSupplierId(supplier.id);
-        setNewSupplierName(supplier.name);
-        setNewSupplierContact(supplier.contact);
-        setNewSupplierDocument(supplier.document);
-        setIsModalOpen(true);
+        setSupplierToActOn(supplier);
+        setPendingAction('Edit');
+        setAuthModalOpen(true);
+    };
+
+    const handleDelete = (supplier: any) => {
+        setSupplierToActOn(supplier);
+        setPendingAction('Delete');
+        setAuthModalOpen(true);
+    };
+
+    const confirmAction = () => {
+        if (!supplierToActOn || !pendingAction) return;
+
+        if (pendingAction === 'Edit') {
+            setCurrentSupplierId(supplierToActOn.id);
+            setNewSupplierName(supplierToActOn.name);
+            setNewSupplierContact(supplierToActOn.contact);
+            setNewSupplierDocument(supplierToActOn.document);
+            setIsModalOpen(true);
+        } else if (pendingAction === 'Delete') {
+            removeSupplier(supplierToActOn.id);
+        }
+
+        setAuthModalOpen(false);
+        setPendingAction(null);
+        setSupplierToActOn(null);
     };
 
     const handleNew = () => {
@@ -55,6 +84,12 @@ export const Suppliers = () => {
 
     return (
         <div className="space-y-6">
+            <AdminAuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                onConfirm={confirmAction}
+                actionType={pendingAction || 'Edit'}
+            />
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-white">Fornecedores</h2>
@@ -84,11 +119,7 @@ export const Suppliers = () => {
                                         <Edit className="w-4 h-4" />
                                     </button>
                                     <button
-                                        onClick={() => {
-                                            if (confirm('Tem certeza que deseja excluir este fornecedor?')) {
-                                                removeSupplier(supplier.id);
-                                            }
-                                        }}
+                                        onClick={() => handleDelete(supplier)}
                                         className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
                                         title="Excluir"
                                     >

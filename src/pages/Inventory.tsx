@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType, type Location } from '../types';
 import { Package, ArrowRightLeft, Truck } from 'lucide-react';
+import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Inventory = () => {
     const { inventory, transferStock, currentUser } = useAppStore();
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+
+    // Admin Auth State
+    const [authModalOpen, setAuthModalOpen] = useState(false);
 
     // Transfer State
     const [transferType, setTransferType] = useState<ProductType>('3kg');
@@ -18,6 +22,10 @@ export const Inventory = () => {
         const qty = parseInt(transferQty);
         if (!qty || qty <= 0) return;
 
+        setAuthModalOpen(true);
+    };
+
+    const confirmTransfer = () => {
         try {
             transferStock(transferFrom, transferTo, transferType, Number(transferQty));
             setIsTransferModalOpen(false);
@@ -26,6 +34,7 @@ export const Inventory = () => {
         } catch (error: any) {
             alert(error.message);
         }
+        setAuthModalOpen(false);
     };
 
     const InventoryCard = ({ location, items, color }: { location: string; items: Record<string, number>; color: string }) => (
@@ -52,6 +61,12 @@ export const Inventory = () => {
 
     return (
         <div className="space-y-6">
+            <AdminAuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                onConfirm={confirmTransfer}
+                actionType="Edit"
+            />
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-white">Estoque</h2>

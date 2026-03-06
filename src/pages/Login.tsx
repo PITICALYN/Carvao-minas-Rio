@@ -8,9 +8,10 @@ export const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (login(username.trim(), password.trim())) {
+        const success = await login(username.trim(), password.trim());
+        if (success) {
             setError('');
         } else {
             setError('Usuário ou senha incorretos');

@@ -2,11 +2,17 @@ import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type UserRole, PERMISSIONS } from '../types';
 import { Plus, Trash2, Shield, User as UserIcon, RefreshCw, Edit } from 'lucide-react';
+import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Users = () => {
     const { users, addUser, updateUser, removeUser, currentUser } = useAppStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+    // Admin Auth State
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<'Edit' | 'Delete' | 'Reset' | null>(null);
+    const [userToActOn, setUserToActOn] = useState<any | null>(null);
 
     // Form State
     const [name, setName] = useState('');
@@ -85,8 +91,37 @@ export const Users = () => {
         setIsModalOpen(true);
     };
 
+    const requestAction = (action: 'Edit' | 'Delete' | 'Reset', user: any) => {
+        setUserToActOn(user);
+        setPendingAction(action);
+        setAuthModalOpen(true);
+    };
+
+    const confirmAction = () => {
+        if (!userToActOn || !pendingAction) return;
+
+        if (pendingAction === 'Edit') {
+            handleEdit(userToActOn);
+        } else if (pendingAction === 'Delete') {
+            removeUser(userToActOn.id);
+        } else if (pendingAction === 'Reset') {
+            useAppStore.getState().updateUserPassword(userToActOn.id, '123');
+            alert('Senha resetada com sucesso!');
+        }
+
+        setAuthModalOpen(false);
+        setPendingAction(null);
+        setUserToActOn(null);
+    };
+
     return (
         <div className="space-y-6">
+            <AdminAuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                onConfirm={confirmAction}
+                actionType={pendingAction === 'Delete' ? 'Delete' : 'Edit'}
+            />
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold text-white mb-2">Gestão de Usuários</h1>
@@ -133,26 +168,21 @@ export const Users = () => {
                         {user.username !== 'admin' && (
                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
-                                    onClick={() => handleEdit(user)}
+                                    onClick={() => requestAction('Edit', user)}
                                     className="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                                     title="Editar Usuário"
                                 >
                                     <Edit className="w-5 h-5" />
                                 </button>
                                 <button
-                                    onClick={() => {
-                                        if (confirm(`Resetar senha de ${user.name} para '123'?`)) {
-                                            useAppStore.getState().updateUserPassword(user.id, '123');
-                                            alert('Senha resetada com sucesso!');
-                                        }
-                                    }}
+                                    onClick={() => requestAction('Reset', user)}
                                     className="p-2 text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
                                     title="Resetar Senha para '123'"
                                 >
                                     <RefreshCw className="w-5 h-5" />
                                 </button>
                                 <button
-                                    onClick={() => removeUser(user.id)}
+                                    onClick={() => requestAction('Delete', user)}
                                     className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                     title="Remover usuário"
                                 >

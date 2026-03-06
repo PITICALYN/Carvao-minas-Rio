@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Plus, Search, MapPin, Phone, Mail, FileText, DollarSign, Edit, Trash2 } from 'lucide-react';
 import { type Customer, type PriceTable } from '../types';
+import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Comercial = () => {
     const {
@@ -13,6 +14,11 @@ export const Comercial = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'customers' | 'prices'>('customers');
+
+    // Admin Auth State
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<'Edit' | 'Delete' | null>(null);
+    const [itemToActOn, setItemToActOn] = useState<{ type: 'Customer' | 'PriceTable', data: any } | null>(null);
 
     // Edit State
     const [currentCustomerId, setCurrentCustomerId] = useState<string | null>(null);
@@ -79,11 +85,6 @@ export const Comercial = () => {
         setNewCustomer({ name: '', document: '', email: '', phone: '', address: '', creditLimit: 0, paymentTerms: '30 dias' });
     };
 
-    const handleEditCustomer = (customer: Customer) => {
-        setCurrentCustomerId(customer.id);
-        setNewCustomer({ ...customer });
-        setIsModalOpen(true);
-    };
 
     const handleNewCustomer = () => {
         resetCustomerForm();
@@ -117,19 +118,54 @@ export const Comercial = () => {
         setNewPriceTable({ name: '', prices: { '3kg': 0, '5kg': 0, 'Paulistao': 0, 'Bulk': 0 } });
     };
 
-    const handleEditPriceTable = (table: PriceTable) => {
-        setCurrentPriceTableId(table.id);
-        setNewPriceTable({ ...table });
-        setIsPriceModalOpen(true);
-    };
 
     const handleNewPriceTable = () => {
         resetPriceTableForm();
         setIsPriceModalOpen(true);
     };
 
+    const requestAction = (type: 'Customer' | 'PriceTable', action: 'Edit' | 'Delete', data: any) => {
+        setItemToActOn({ type, data });
+        setPendingAction(action);
+        setAuthModalOpen(true);
+    };
+
+    const confirmAction = () => {
+        if (!itemToActOn || !pendingAction) return;
+
+        if (itemToActOn.type === 'Customer') {
+            if (pendingAction === 'Edit') {
+                const customer = itemToActOn.data as Customer;
+                setCurrentCustomerId(customer.id);
+                setNewCustomer({ ...customer });
+                setIsModalOpen(true);
+            } else if (pendingAction === 'Delete') {
+                removeCustomer(itemToActOn.data.id);
+            }
+        } else if (itemToActOn.type === 'PriceTable') {
+            if (pendingAction === 'Edit') {
+                const table = itemToActOn.data as PriceTable;
+                setCurrentPriceTableId(table.id);
+                setNewPriceTable({ ...table });
+                setIsPriceModalOpen(true);
+            } else if (pendingAction === 'Delete') {
+                removePriceTable(itemToActOn.data.id);
+            }
+        }
+
+        setAuthModalOpen(false);
+        setPendingAction(null);
+        setItemToActOn(null);
+    };
+
     return (
         <div className="space-y-6">
+            <AdminAuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                onConfirm={confirmAction}
+                actionType={pendingAction || 'Edit'}
+            />
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-white">Comercial</h1>
                 <div className="flex gap-2">
@@ -174,18 +210,14 @@ export const Comercial = () => {
                                 {currentUser?.role === 'Admin' && (
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
-                                            onClick={() => handleEditCustomer(customer)}
+                                            onClick={() => requestAction('Customer', 'Edit', customer)}
                                             className="p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors"
                                             title="Editar"
                                         >
                                             <Edit className="w-4 h-4" />
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                if (confirm('Tem certeza que deseja excluir este cliente?')) {
-                                                    removeCustomer(customer.id);
-                                                }
-                                            }}
+                                            onClick={() => requestAction('Customer', 'Delete', customer)}
                                             className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
                                             title="Excluir"
                                         >
@@ -260,18 +292,14 @@ export const Comercial = () => {
                                 {currentUser?.role === 'Admin' && (
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
-                                            onClick={() => handleEditPriceTable(table)}
+                                            onClick={() => requestAction('PriceTable', 'Edit', table)}
                                             className="p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors"
                                             title="Editar"
                                         >
                                             <Edit className="w-4 h-4" />
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                if (confirm('Tem certeza que deseja excluir esta tabela?')) {
-                                                    removePriceTable(table.id);
-                                                }
-                                            }}
+                                            onClick={() => requestAction('PriceTable', 'Delete', table)}
                                             className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
                                             title="Excluir"
                                         >

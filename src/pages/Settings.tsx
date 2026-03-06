@@ -1,12 +1,18 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Download, Upload, AlertTriangle, Save, RefreshCw, DollarSign } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { AdminAuthModal } from '../components/AdminAuthModal';
 
 export const Settings = () => {
     const store = useAppStore();
     const { currentUser, restoreData } = store;
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Admin Auth State
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<'Restore' | 'UpdateDRE' | null>(null);
+    const [pendingData, setPendingData] = useState<any>(null);
 
     if (currentUser?.role !== 'Admin') {
         return (
@@ -47,6 +53,8 @@ export const Settings = () => {
         XLSX.writeFile(wb, `backup_carvoaria_${date}.xlsx`);
     };
 
+    const [localDreSettings, setLocalDreSettings] = useState(store.dreSettings || { taxRate: 6, cmvRate: 40, fixedLaborCost: 0 });
+
     const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -56,15 +64,8 @@ export const Settings = () => {
             const bstr = evt.target?.result;
             const wb = XLSX.read(bstr, { type: 'binary' });
 
-            if (!confirm('ATENÇÃO: Restaurar um backup irá SUBSTITUIR todos os dados atuais do sistema. Tem certeza que deseja continuar?')) {
-                if (fileInputRef.current) fileInputRef.current.value = '';
-                return;
-            }
-
             try {
                 const newData: any = {};
-
-                // Helper to get data
                 const getSheetData = (name: string) => {
                     const ws = wb.Sheets[name];
                     return ws ? XLSX.utils.sheet_to_json(ws) : [];
@@ -77,11 +78,9 @@ export const Settings = () => {
                 newData.suppliers = getSheetData('Fornecedores');
                 newData.transactions = getSheetData('Financeiro');
 
-                // Users - be careful not to lock out admin if backup is old
                 const users = getSheetData('Usuários');
                 if (users.length > 0) newData.users = users;
 
-                // Inventory reconstruction
                 const inventoryRows: any[] = getSheetData('Estoque');
                 if (inventoryRows.length > 0) {
                     newData.inventory = {
@@ -95,8 +94,9 @@ export const Settings = () => {
                     });
                 }
 
-                restoreData(newData);
-                alert('Backup restaurado com sucesso!');
+                setPendingData(newData);
+                setPendingAction('Restore');
+                setAuthModalOpen(true);
             } catch (error) {
                 console.error(error);
                 alert('Erro ao processar arquivo de backup. Verifique se o formato está correto.');
@@ -107,8 +107,35 @@ export const Settings = () => {
         reader.readAsBinaryString(file);
     };
 
+    const confirmAction = () => {
+        if (!pendingAction) return;
+
+        if (pendingAction === 'Restore') {
+            restoreData(pendingData);
+            alert('Backup restaurado com sucesso!');
+        } else if (pendingAction === 'UpdateDRE') {
+            store.updateDreSettings(localDreSettings);
+            alert('Configurações salvas com sucesso!');
+        }
+
+        setAuthModalOpen(false);
+        setPendingAction(null);
+        setPendingData(null);
+    };
+
+    const handleSaveDRE = () => {
+        setPendingAction('UpdateDRE');
+        setAuthModalOpen(true);
+    };
+
     return (
         <div className="space-y-8">
+            <AdminAuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                onConfirm={confirmAction}
+                actionType="Edit"
+            />
             <div>
                 <h2 className="text-2xl font-bold text-white">Configurações</h2>
                 <p className="text-slate-400">Gerencie backups e preferências do sistema.</p>
@@ -193,9 +220,9 @@ export const Settings = () => {
                         <div className="relative">
                             <input
                                 type="number"
-                                value={store.dreSettings?.taxRate ?? 6}
-                                onChange={(e) => store.updateDreSettings({
-                                    ...store.dreSettings,
+                                value={localDreSettings.taxRate}
+                                onChange={(e) => setLocalDreSettings({
+                                    ...localDreSettings,
                                     taxRate: Number(e.target.value)
                                 })}
                                 className="w-full input-field px-4 py-2 pr-8"
@@ -211,9 +238,9 @@ export const Settings = () => {
                         <div className="relative">
                             <input
                                 type="number"
-                                value={store.dreSettings?.cmvRate ?? 40}
-                                onChange={(e) => store.updateDreSettings({
-                                    ...store.dreSettings,
+                                value={localDreSettings.cmvRate}
+                                onChange={(e) => setLocalDreSettings({
+                                    ...localDreSettings,
                                     cmvRate: Number(e.target.value)
                                 })}
                                 className="w-full input-field px-4 py-2 pr-8"
@@ -230,9 +257,9 @@ export const Settings = () => {
                             <span className="absolute left-3 top-2 text-slate-500">R$</span>
                             <input
                                 type="number"
-                                value={store.dreSettings?.fixedLaborCost ?? 0}
-                                onChange={(e) => store.updateDreSettings({
-                                    ...store.dreSettings,
+                                value={localDreSettings.fixedLaborCost}
+                                onChange={(e) => setLocalDreSettings({
+                                    ...localDreSettings,
                                     fixedLaborCost: Number(e.target.value)
                                 })}
                                 className="w-full input-field px-4 py-2 pl-10"
@@ -241,6 +268,16 @@ export const Settings = () => {
                         </div>
                         <p className="text-xs text-slate-500 mt-1">Adicionado automaticamente às Despesas Operacionais.</p>
                     </div>
+                </div>
+
+                <div className="flex justify-end mt-6">
+                    <button
+                        onClick={handleSaveDRE}
+                        className="btn-primary px-6 py-2 rounded-lg flex items-center gap-2"
+                    >
+                        <Save className="w-4 h-4" />
+                        Salvar Configurações
+                    </button>
                 </div>
             </div>
         </div>

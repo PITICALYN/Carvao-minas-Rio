@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
@@ -18,7 +19,13 @@ import { AuditLogs } from './pages/AuditLogs';
 import { useAppStore } from './store/useAppStore';
 
 function App() {
-  const { currentUser } = useAppStore();
+  const { currentUser, initialize } = useAppStore();
+
+  useEffect(() => {
+    if (currentUser) {
+      initialize();
+    }
+  }, [currentUser, initialize]);
 
   if (!currentUser) {
     return <Login />;
