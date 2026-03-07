@@ -287,7 +287,7 @@ export const Layout = () => {
                         <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
                         <span className="font-medium">Sair</span>
                     </button>
-                    <div className="mt-4 text-[10px] text-slate-600 text-center border-t border-white/5 pt-2">
+                    <div className="mt-4 text-[11px] text-slate-400 text-center border-t border-white/10 pt-3 opacity-60">
                         v1.0.2 - {new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} (Reset)
                     </div>
                 </div>
