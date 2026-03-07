@@ -36,6 +36,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="comercial" element={<Comercial />} />
           <Route path="vendas" element={<Sales />} />
           <Route path="compras" element={<Compras />} />
