@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
 import { User, Lock, AlertCircle } from 'lucide-react';
 
 export const Login = () => {
+    const navigate = useNavigate();
     const { login } = useAppStore();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -13,6 +15,7 @@ export const Login = () => {
         const success = await login(username.trim(), password.trim());
         if (success) {
             setError('');
+            navigate('/');
         } else {
             setError('Usuário ou senha incorretos');
         }

@@ -287,12 +287,12 @@ export const Layout = () => {
                         <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
                         <span className="font-medium">Sair</span>
                     </button>
-                    <div className="mt-auto mb-4 p-3 bg-white/5 rounded-xl border border-white/10 text-center">
-                        <p className="text-[11px] font-bold text-blue-400 mb-1">
-                            Versão do Software
+                    <div className="mt-auto mb-4 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-center shadow-inner">
+                        <p className="text-[11px] font-black text-blue-400 mb-1 uppercase tracking-widest">
+                            Software Oficial
                         </p>
-                        <p className="text-[10px] text-slate-400 font-mono">
-                            v1.0.2 - {new Date().toLocaleDateString('pt-BR')} (Reset)
+                        <p className="text-[10px] text-slate-300 font-mono">
+                            v1.0.3 - Final Build
                         </p>
                     </div>
                 </div>

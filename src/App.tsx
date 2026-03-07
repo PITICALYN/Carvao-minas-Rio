@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
-import { Suppliers } from './pages/Suppliers';
 import { Production } from './pages/Production';
 import { Inventory } from './pages/Inventory';
 import { Sales } from './pages/Sales';
@@ -49,12 +48,7 @@ function App() {
           <Route path="usuarios" element={<Users />} />
           <Route path="configuracoes" element={<Settings />} />
           <Route path="auditoria" element={<AuditLogs />} />
-
-          {/* Legacy Routes Redirects or Keep for now */}
-          <Route path="suppliers" element={<Suppliers />} />
-          <Route path="sales" element={<Sales />} />
-          <Route path="inventory" element={<Inventory />} />
-          <Route path="reports" element={<Reports />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>
