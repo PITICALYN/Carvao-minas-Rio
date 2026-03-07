@@ -1,3 +1,4 @@
+import { generateId } from "../utils/id";
 import { create } from 'zustand';
 import { type Supplier, type ProductionBatch, type Sale, type InventoryState, type ProductType, type Location, type User, type Customer, type PurchaseOrder, type PurchaseStatus, type FinancialTransaction, type Driver, type Shipment, type PriceTable, type AuditLog, type AuditAction, type AuditResource, type Notification } from '../types';
 import { supabase } from '../lib/supabase';
@@ -236,7 +237,7 @@ export const useAppStore = create<AppState>()(
 
         logAction: async (userId, userName, action, resource, details, entityId) => {
             const log = {
-                id: crypto.randomUUID(),
+                id: generateId(),
                 timestamp: Date.now(),
                 userId,
                 userName,
@@ -452,7 +453,7 @@ export const useAppStore = create<AppState>()(
 
             // Auto-create Financial Transaction
             const transaction: FinancialTransaction = {
-                id: crypto.randomUUID(),
+                id: generateId(),
                 date: sale.date,
                 dueDate: sale.dueDate || sale.date,
                 type: 'Income',
@@ -1249,7 +1250,7 @@ export const useAppStore = create<AppState>()(
                 Object.entries(products).forEach(([product, qty]) => {
                     if (qty < LOW_STOCK_THRESHOLD) {
                         newNotifications.push({
-                            id: crypto.randomUUID(),
+                            id: generateId(),
                             title: 'Estoque Baixo',
                             message: `O produto ${product} em ${location} está com apenas ${qty} unidades.`,
                             type: 'warning',
@@ -1281,7 +1282,7 @@ export const useAppStore = create<AppState>()(
                     if (diffDays < 0) {
                         // Overdue
                         newNotifications.push({
-                            id: crypto.randomUUID(),
+                            id: generateId(),
                             title: `${prefix} Atrasado`,
                             message: `O ${prefix.toLowerCase()} "${t.description}" de R$ ${t.amount.toLocaleString()} venceu em ${dueDate.toLocaleDateString()}.`,
                             type: 'error',
@@ -1292,7 +1293,7 @@ export const useAppStore = create<AppState>()(
                     } else if (diffDays === 0) {
                         // Due Today
                         newNotifications.push({
-                            id: crypto.randomUUID(),
+                            id: generateId(),
                             title: `${prefix} Vence Hoje`,
                             message: `O ${prefix.toLowerCase()} "${t.description}" de R$ ${t.amount.toLocaleString()} vence hoje!`,
                             type: 'warning',
@@ -1303,7 +1304,7 @@ export const useAppStore = create<AppState>()(
                     } else if (diffDays <= 3) {
                         // Due Soon
                         newNotifications.push({
-                            id: crypto.randomUUID(),
+                            id: generateId(),
                             title: `${prefix} Próximo`,
                             message: `O ${prefix.toLowerCase()} "${t.description}" vence em ${diffDays} dias.`,
                             type: 'info',

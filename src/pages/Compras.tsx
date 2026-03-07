@@ -1,3 +1,4 @@
+import { generateId } from "../utils/id";
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Plus, Search, Calendar, Edit, Trash2, X } from 'lucide-react';
@@ -76,7 +77,7 @@ export const Compras = () => {
         if (!newOrder.supplierId || !newOrder.items?.length) return;
 
         const orderData = {
-            id: newOrder.id || crypto.randomUUID(),
+            id: newOrder.id || generateId(),
             supplierId: newOrder.supplierId,
             date: newOrder.date || new Date().toISOString(),
             status: newOrder.status || 'Pending',

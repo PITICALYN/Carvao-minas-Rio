@@ -1,3 +1,4 @@
+import { generateId } from "../utils/id";
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Plus, User, Phone, Edit, Trash2, X } from 'lucide-react';
@@ -30,7 +31,7 @@ export const Suppliers = () => {
             });
         } else {
             addSupplier({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 name: newSupplierName,
                 contact: newSupplierContact,
                 document: newSupplierDocument,

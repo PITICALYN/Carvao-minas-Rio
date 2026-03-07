@@ -1,3 +1,4 @@
+import { generateId } from "../utils/id";
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Plus, Search, TrendingUp, DollarSign, Calendar, ArrowUpRight, ArrowDownLeft, Printer, Edit, Trash2, X } from 'lucide-react';
@@ -34,7 +35,7 @@ export const Financeiro = () => {
         if (!newTransaction.description || !newTransaction.amount) return;
 
         const transactionData = {
-            id: newTransaction.id || crypto.randomUUID(),
+            id: newTransaction.id || generateId(),
             date: newTransaction.date || new Date().toISOString(),
             dueDate: newTransaction.dueDate || new Date().toISOString(),
             type: newTransaction.type || 'Expense',

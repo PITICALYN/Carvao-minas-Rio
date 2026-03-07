@@ -1,3 +1,4 @@
+import { generateId } from "../utils/id";
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type UserRole, PERMISSIONS } from '../types';
@@ -73,7 +74,7 @@ export const Users = () => {
         } else {
             // Create new user
             addUser({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 name,
                 username,
                 password,

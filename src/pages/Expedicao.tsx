@@ -1,3 +1,4 @@
+import { generateId } from "../utils/id";
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Plus, Search, Truck, Calendar, Package, ArrowRight, Printer, CheckCircle, Edit, Trash2, X } from 'lucide-react';
@@ -42,7 +43,7 @@ export const Expedicao = () => {
         if (!newDriver.name || !newDriver.licensePlate) return;
 
         const driverData = {
-            id: newDriver.id || crypto.randomUUID(),
+            id: newDriver.id || generateId(),
             name: newDriver.name,
             licensePlate: newDriver.licensePlate,
             vehicleModel: newDriver.vehicleModel || ''
@@ -74,7 +75,7 @@ export const Expedicao = () => {
 
         try {
             const shipmentData = {
-                id: newShipment.id || crypto.randomUUID(),
+                id: newShipment.id || generateId(),
                 type: shipmentType,
                 date: newShipment.date || new Date().toISOString(),
                 driverId: newShipment.driverId,

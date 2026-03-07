@@ -287,8 +287,13 @@ export const Layout = () => {
                         <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
                         <span className="font-medium">Sair</span>
                     </button>
-                    <div className="mt-4 text-[11px] text-slate-400 text-center border-t border-white/10 pt-3 opacity-60">
-                        v1.0.2 - {new Date().toLocaleDateString('pt-BR')} {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} (Reset)
+                    <div className="mt-auto mb-4 p-3 bg-white/5 rounded-xl border border-white/10 text-center">
+                        <p className="text-[11px] font-bold text-blue-400 mb-1">
+                            Versão do Software
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-mono">
+                            v1.0.2 - {new Date().toLocaleDateString('pt-BR')} (Reset)
+                        </p>
                     </div>
                 </div>
             </aside>

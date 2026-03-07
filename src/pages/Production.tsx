@@ -1,3 +1,4 @@
+import { generateId } from "../utils/id";
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType } from '../types';
@@ -157,7 +158,7 @@ export const Production = () => {
         const loss = ((totalInputKg - totalOutputKg) / totalInputKg) * 100;
 
         const batchData = {
-            id: currentBatchId || crypto.randomUUID(),
+            id: currentBatchId || generateId(),
             inputs: validInputs.map(i => ({ supplierId: i.supplierId, weightKg: parseFloat(i.weight) })),
             date: new Date().toISOString().split('T')[0],
             inputWeightKg: totalInputKg,

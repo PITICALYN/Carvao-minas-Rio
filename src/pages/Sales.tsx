@@ -1,3 +1,4 @@
+import { generateId } from "../utils/id";
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { type ProductType, type Location, type Sale } from '../types';
@@ -75,7 +76,7 @@ export const Sales = () => {
             }
 
             const saleData = {
-                id: currentSaleId || crypto.randomUUID(),
+                id: currentSaleId || generateId(),
                 date: date.toLocaleDateString('sv-SE'),
                 location,
                 customerName,

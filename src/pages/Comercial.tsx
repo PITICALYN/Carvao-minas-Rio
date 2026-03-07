@@ -1,3 +1,4 @@
+import { generateId } from "../utils/id";
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Plus, Search, MapPin, Phone, Mail, FileText, DollarSign, Edit, Trash2, ShieldAlert, ShieldCheck, X } from 'lucide-react';
@@ -67,7 +68,7 @@ export const Comercial = () => {
             } as Customer);
         } else {
             addCustomer({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 name: newCustomer.name,
                 document: newCustomer.document,
                 email: newCustomer.email,
@@ -116,7 +117,7 @@ export const Comercial = () => {
             } as PriceTable);
         } else {
             addPriceTable({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 name: newPriceTable.name,
                 prices: newPriceTable.prices || {}
             } as PriceTable);
