@@ -14,7 +14,7 @@ const NavItem = ({ to, icon: Icon, label }: { to: string; icon: React.ElementTyp
             className={clsx(
                 'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group',
                 isActive
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                     : 'text-slate-400 hover:text-white hover:bg-white/5'
             )}
         >
@@ -71,7 +71,7 @@ export const Layout = () => {
         switch (type) {
             case 'warning': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
             case 'error': return 'text-red-400 bg-red-500/10 border-red-500/20';
-            case 'success': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+            case 'success': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
             default: return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
         }
     };
@@ -263,7 +263,7 @@ export const Layout = () => {
                                                     className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-all"
                                                     title="Marcar como lida"
                                                 >
-                                                    <Check className="w-3 h-3 text-emerald-400" />
+                                                    <Check className="w-3 h-3 text-blue-400" />
                                                 </button>
                                             )}
                                         </div>
@@ -319,7 +319,7 @@ export const Layout = () => {
                                     type="password"
                                     value={newPassword}
                                     onChange={e => setNewPassword(e.target.value)}
-                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                                     placeholder="******"
                                 />
                             </div>
@@ -330,7 +330,7 @@ export const Layout = () => {
                                     type="password"
                                     value={confirmPassword}
                                     onChange={e => setConfirmPassword(e.target.value)}
-                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                                     placeholder="******"
                                 />
                             </div>
@@ -344,7 +344,7 @@ export const Layout = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+                                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
                                 >
                                     Salvar
                                 </button>

@@ -20,7 +20,7 @@ export const Timeline: React.FC<TimelineProps> = ({ logs }) => {
     const getColor = (action: string) => {
         if (action === 'Delete') return 'bg-red-500/20 text-red-400 border-red-500/20';
         if (action === 'Update') return 'bg-amber-500/20 text-amber-400 border-amber-500/20';
-        if (action === 'Create') return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20';
+        if (action === 'Create') return 'bg-blue-500/20 text-blue-400 border-blue-500/20';
         return 'bg-blue-500/20 text-blue-400 border-blue-500/20';
     };
 

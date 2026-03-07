@@ -479,15 +479,15 @@ export const Production = () => {
                             </div>
 
                             {/* Summary */}
-                            <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex justify-between items-center">
+                            <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex justify-between items-center">
                                 <div>
-                                    <p className="text-xs text-emerald-400 font-medium uppercase tracking-wider">Perda Estimada</p>
-                                    <p className="text-2xl font-bold text-emerald-400">
+                                    <p className="text-xs text-blue-400 font-medium uppercase tracking-wider">Perda Estimada</p>
+                                    <p className="text-2xl font-bold text-blue-400">
                                         {calculateLoss().toFixed(1)}%
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xs text-emerald-400">Peso Entrada: {getTotalInputWeight().toFixed(2)} kg</p>
+                                    <p className="text-xs text-blue-400">Peso Entrada: {getTotalInputWeight().toFixed(2)} kg</p>
                                 </div>
                             </div>
 

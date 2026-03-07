@@ -287,7 +287,7 @@ export const Expedicao = () => {
                             <input
                                 type="text"
                                 placeholder="Buscar carga..."
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                             />
                         </div>
                         <button
@@ -418,7 +418,7 @@ export const Expedicao = () => {
                                         ) : (
                                             <button
                                                 onClick={() => updateShipmentStatus(shipment.id, 'Delivered')}
-                                                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                                                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm font-medium transition-colors"
                                             >
                                                 Confirmar Entrega
                                             </button>
@@ -648,7 +648,7 @@ export const Expedicao = () => {
                                             <button
                                                 type="button"
                                                 onClick={addTransferItem}
-                                                className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 rounded-lg"
+                                                className="bg-blue-600 hover:bg-blue-500 text-white px-3 rounded-lg"
                                             >
                                                 <Plus className="w-4 h-4" />
                                             </button>
@@ -659,7 +659,7 @@ export const Expedicao = () => {
                                                 <div key={idx} className="flex justify-between items-center bg-slate-800 p-2 rounded text-sm">
                                                     <span className="text-white">{item.productType}</span>
                                                     <div className="flex items-center gap-3">
-                                                        <span className="font-bold text-emerald-400">{item.quantity}</span>
+                                                        <span className="font-bold text-blue-400">{item.quantity}</span>
                                                         <button
                                                             type="button"
                                                             onClick={() => removeTransferItem(idx)}

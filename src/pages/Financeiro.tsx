@@ -188,7 +188,7 @@ export const Financeiro = () => {
             {/* Financial Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="glass-card p-6 rounded-2xl flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400">
+                    <div className="p-3 rounded-xl bg-blue-500/20 text-blue-400">
                         <ArrowDownLeft className="w-6 h-6" />
                     </div>
                     <div>
@@ -211,7 +211,7 @@ export const Financeiro = () => {
                     </div>
                     <div>
                         <p className="text-sm text-slate-400 font-medium">Saldo Atual</p>
-                        <h3 className={`text-2xl font-bold ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <h3 className={`text-2xl font-bold ${balance >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
                             R$ {balance.toLocaleString()}
                         </h3>
                     </div>
@@ -221,7 +221,7 @@ export const Financeiro = () => {
             {/* Cash Flow Projection Chart */}
             <div className="glass-panel p-6 rounded-2xl">
                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                    <TrendingUp className="w-5 h-5 text-blue-400" />
                     Fluxo de Caixa Projetado (30 Dias)
                 </h3>
                 <div className="h-80 w-full">
@@ -271,7 +271,7 @@ export const Financeiro = () => {
                     <input
                         type="text"
                         placeholder="Buscar transação..."
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     />
                 </div>
                 <div className="flex gap-2">
@@ -328,7 +328,7 @@ export const Financeiro = () => {
                                     {transaction.location && (
                                         <>
                                             <span>•</span>
-                                            <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border ${transaction.location === 'Factory' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                                            <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border ${transaction.location === 'Factory' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
                                                 {transaction.location === 'Factory' ? 'Fábrica' : 'Itaguaí'}
                                             </span>
                                         </>

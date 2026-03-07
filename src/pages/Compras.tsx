@@ -177,7 +177,7 @@ export const Compras = () => {
                                     {order.originAuthorizationNumber && <span className="ml-2 text-xs bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">AO: {order.originAuthorizationNumber}</span>}
                                 </p>
                             </div>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${order.status === 'Received' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${order.status === 'Received' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
                                 order.status === 'Pending' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
                                     'bg-red-500/10 text-red-400 border-red-500/20'
                                 }`}>
@@ -228,7 +228,7 @@ export const Compras = () => {
                                             useAppStore.getState().updatePurchaseOrderStatus(order.id, 'Received');
                                         }
                                     }}
-                                    className="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-500/20 transition-colors"
+                                    className="px-3 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/20 transition-colors"
                                 >
                                     Receber
                                 </button>

@@ -62,7 +62,7 @@ export const Reports = () => {
             {/* Cost Analysis Card */}
             <div className="glass-panel p-6 rounded-2xl">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-emerald-400" />
+                    <DollarSign className="w-5 h-5 text-blue-400" />
                     Análise de Custos (Estimativa)
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -73,15 +73,15 @@ export const Reports = () => {
                     </div>
                     <div className="p-4 rounded-xl bg-slate-800/50 border border-white/5">
                         <p className="text-sm text-slate-400 mb-1">Custo Saco 3kg</p>
-                        <p className="text-xl font-bold text-emerald-400">R$ {(avgCostPerKg * 3).toFixed(2)}</p>
+                        <p className="text-xl font-bold text-blue-400">R$ {(avgCostPerKg * 3).toFixed(2)}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-slate-800/50 border border-white/5">
                         <p className="text-sm text-slate-400 mb-1">Custo Saco 5kg</p>
-                        <p className="text-xl font-bold text-emerald-400">R$ {(avgCostPerKg * 5).toFixed(2)}</p>
+                        <p className="text-xl font-bold text-blue-400">R$ {(avgCostPerKg * 5).toFixed(2)}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-slate-800/50 border border-white/5">
                         <p className="text-sm text-slate-400 mb-1">Custo Paulistão (20kg)</p>
-                        <p className="text-xl font-bold text-emerald-400">R$ {(avgCostPerKg * 20).toFixed(2)}</p>
+                        <p className="text-xl font-bold text-blue-400">R$ {(avgCostPerKg * 20).toFixed(2)}</p>
                     </div>
                 </div>
             </div>

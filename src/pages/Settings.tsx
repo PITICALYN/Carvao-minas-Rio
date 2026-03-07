@@ -215,7 +215,7 @@ export const Settings = () => {
             {/* DRE Configuration */}
             <div className="glass-card p-6 rounded-2xl border border-white/5 mt-6">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400">
+                    <div className="p-3 rounded-xl bg-blue-500/20 text-blue-400">
                         <DollarSign className="w-6 h-6" />
                     </div>
                     <div>
@@ -350,7 +350,7 @@ export const Settings = () => {
                 </div>
 
                 <div className="mt-6 flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5">
-                    <div className="h-16 w-16 rounded-full border-2 border-emerald-500/20 overflow-hidden shadow-lg">
+                    <div className="h-16 w-16 rounded-full border-2 border-blue-500/20 overflow-hidden shadow-lg">
                         <img
                             src={store.systemSettings?.logoUrl}
                             alt="Preview"

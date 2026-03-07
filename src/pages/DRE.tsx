@@ -108,18 +108,18 @@ export const DRE = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-6">
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-6">
                     <div className="flex justify-between items-start mb-4">
                         <div>
-                            <p className="text-emerald-400 text-sm font-medium mb-1">Receita Líquida</p>
+                            <p className="text-blue-400 text-sm font-medium mb-1">Receita Líquida</p>
                             <h3 className="text-2xl font-bold text-white">{formatCurrency(financialData.netRevenue)}</h3>
                         </div>
-                        <div className="p-2 bg-emerald-500/20 rounded-lg">
-                            <TrendingUp className="w-5 h-5 text-emerald-400" />
+                        <div className="p-2 bg-blue-500/20 rounded-lg">
+                            <TrendingUp className="w-5 h-5 text-blue-400" />
                         </div>
                     </div>
-                    <div className="w-full bg-emerald-950/50 h-1.5 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: '100%' }}></div>
+                    <div className="w-full bg-blue-950/50 h-1.5 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: '100%' }}></div>
                     </div>
                 </div>
 
@@ -167,7 +167,7 @@ export const DRE = () => {
             <div className="bg-slate-900 border border-white/10 rounded-xl overflow-hidden">
                 <div className="p-6 border-b border-white/10 bg-white/5">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-emerald-500" />
+                        <Calendar className="w-5 h-5 text-blue-500" />
                         Detalhamento Financeiro
                     </h3>
                 </div>
@@ -177,7 +177,7 @@ export const DRE = () => {
                         <div className="p-4 hover:bg-white/5 transition-colors">
                             <div className="flex justify-between items-center mb-1">
                                 <span className="text-slate-300 font-medium">(+) Receita Bruta de Vendas</span>
-                                <span className="text-emerald-400 font-bold">{formatCurrency(financialData.grossRevenue)}</span>
+                                <span className="text-blue-400 font-bold">{formatCurrency(financialData.grossRevenue)}</span>
                             </div>
                             <div className="text-xs text-slate-500">Total de vendas realizadas no período</div>
                         </div>
@@ -230,10 +230,10 @@ export const DRE = () => {
                         </div>
 
                         {/* 7. Lucro Líquido */}
-                        <div className="p-6 bg-emerald-900/20 font-bold text-lg border-t border-white/10">
+                        <div className="p-6 bg-blue-900/20 font-bold text-lg border-t border-white/10">
                             <div className="flex justify-between items-center">
-                                <span className="text-emerald-400">(=) Resultado Líquido do Exercício</span>
-                                <span className={financialData.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                                <span className="text-blue-400">(=) Resultado Líquido do Exercício</span>
+                                <span className={financialData.netProfit >= 0 ? 'text-blue-400' : 'text-red-400'}>
                                     {formatCurrency(financialData.netProfit)}
                                 </span>
                             </div>

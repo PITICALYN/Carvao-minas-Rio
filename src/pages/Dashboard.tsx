@@ -150,8 +150,8 @@ const DreManagement = () => {
             )}
 
             <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                    <span className="text-sm font-medium text-emerald-400">Receita Bruta</span>
+                <div className="flex justify-between items-center p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                    <span className="text-sm font-medium text-blue-400">Receita Bruta</span>
                     <span className="text-lg font-bold text-white">R$ {totalRevenue.toLocaleString()}</span>
                 </div>
 
@@ -182,13 +182,13 @@ const DreManagement = () => {
                     <div>
                         <span className="block text-xs font-medium text-indigo-400 mb-0.5">LUCRO LÍQUIDO</span>
                         <div className="flex items-center gap-2">
-                            {netProfit >= 0 ? <ArrowUpCircle className="w-5 h-5 text-emerald-500" /> : <ArrowDownCircle className="w-5 h-5 text-red-500" />}
+                            {netProfit >= 0 ? <ArrowUpCircle className="w-5 h-5 text-blue-500" /> : <ArrowDownCircle className="w-5 h-5 text-red-500" />}
                             <span className="text-xl font-black text-white">R$ {netProfit.toLocaleString()}</span>
                         </div>
                     </div>
                     <div className="text-right">
                         <span className="block text-xs font-medium text-slate-400 mb-0.5">MARGEM</span>
-                        <span className={clsx("text-lg font-bold", netProfit >= 0 ? "text-emerald-400" : "text-red-400")}>
+                        <span className={clsx("text-lg font-bold", netProfit >= 0 ? "text-blue-400" : "text-red-400")}>
                             {profitMargin.toFixed(1)}%
                         </span>
                     </div>
@@ -279,7 +279,7 @@ export const Dashboard = () => {
                     title="Estoque Fábrica"
                     value={`${totalStockFactory} un`}
                     icon={Package}
-                    color="bg-emerald-500 text-emerald-600"
+                    color="bg-blue-500 text-blue-600"
                 />
                 <StatCard
                     title="Estoque Itaguai"
@@ -308,7 +308,7 @@ export const Dashboard = () => {
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                                <TrendingUp className="w-5 h-5 text-blue-400" />
                                 Evolução de Vendas
                             </h3>
                             <p className="text-sm text-slate-400">Últimos 30 dias (Vista vs Prazo)</p>

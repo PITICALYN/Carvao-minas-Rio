@@ -207,7 +207,7 @@ export const Comercial = () => {
                             <input
                                 type="text"
                                 placeholder="Buscar cliente..."
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                             />
                         </div>
                         <button
@@ -461,7 +461,7 @@ export const Comercial = () => {
                                             "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
                                             newCustomer.isBlocked
                                                 ? "bg-red-500 text-white"
-                                                : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
+                                                : "bg-blue-500/20 text-blue-400 border border-blue-500/20"
                                         )}
                                     >
                                         {newCustomer.isBlocked ? (

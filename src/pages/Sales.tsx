@@ -206,7 +206,7 @@ export const Sales = () => {
                                         {new Date(sale.timestamp).toLocaleDateString()}
                                     </td>
                                     <td className="px-6 py-4 text-sm text-slate-400">
-                                        <span className={`px-2 py-1 rounded text-xs font-medium ${sale.location === 'Factory' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/20' : 'bg-amber-500/20 text-amber-300 border border-amber-500/20'
+                                        <span className={`px-2 py-1 rounded text-xs font-medium ${sale.location === 'Factory' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/20' : 'bg-amber-500/20 text-amber-300 border border-amber-500/20'
                                             }`}>
                                             {sale.location === 'Factory' ? 'Fábrica' : 'Itaguaí'}
                                         </span>

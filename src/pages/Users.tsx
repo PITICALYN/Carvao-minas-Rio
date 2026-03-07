@@ -151,7 +151,7 @@ export const Users = () => {
                 </div>
                 <button
                     onClick={handleNew}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
                 >
                     <Plus className="w-4 h-4" />
                     Novo Usuário
@@ -164,7 +164,7 @@ export const Users = () => {
                         <div className="flex items-center gap-4">
                             <div className="p-3 rounded-full bg-slate-800 border border-white/5">
                                 {user.role === 'Admin' ? (
-                                    <Shield className="w-6 h-6 text-emerald-400" />
+                                    <Shield className="w-6 h-6 text-blue-400" />
                                 ) : (
                                     <UserIcon className="w-6 h-6 text-slate-400" />
                                 )}
@@ -180,7 +180,7 @@ export const Users = () => {
                                     {user.canPrint && (
                                         <>
                                             <span>•</span>
-                                            <span className="text-emerald-400 text-xs">Imprime</span>
+                                            <span className="text-blue-400 text-xs">Imprime</span>
                                         </>
                                     )}
                                 </div>
@@ -238,7 +238,7 @@ export const Users = () => {
                                     type="text"
                                     value={name}
                                     onChange={e => setName(e.target.value)}
-                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                                     placeholder="Ex: João Silva"
                                 />
                             </div>
@@ -250,7 +250,7 @@ export const Users = () => {
                                     type="text"
                                     value={username}
                                     onChange={e => setUsername(e.target.value)}
-                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                                     placeholder="Ex: joao.silva"
                                 />
                             </div>
@@ -262,7 +262,7 @@ export const Users = () => {
                                     type="password"
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
-                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                                     placeholder="******"
                                 />
                             </div>
@@ -272,7 +272,7 @@ export const Users = () => {
                                 <select
                                     value={role}
                                     onChange={e => setRole(e.target.value as UserRole)}
-                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
+                                    className="w-full bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                                 >
                                     <option value="Factory">Fábrica (Operacional)</option>
                                     <option value="Itaguai">Itaguaí (Operacional)</option>
@@ -312,7 +312,7 @@ export const Users = () => {
                                         }
                                         setPermissions([...new Set(defaultPerms)]);
                                     }}
-                                    className="text-xs bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-2 py-1 rounded transition-colors border border-emerald-500/20"
+                                    className="text-xs bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-2 py-1 rounded transition-colors border border-blue-500/20"
                                 >
                                     Aplicar
                                 </button>
@@ -324,7 +324,7 @@ export const Users = () => {
                                     id="canPrint"
                                     checked={canPrint}
                                     onChange={e => setCanPrint(e.target.checked)}
-                                    className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900"
+                                    className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900"
                                 />
                                 <label htmlFor="canPrint" className="text-sm font-medium text-slate-400 select-none cursor-pointer">
                                     Permitir Impressão
@@ -347,7 +347,7 @@ export const Users = () => {
                                                         setPermissions(permissions.filter(p => p !== value));
                                                     }
                                                 }}
-                                                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900"
+                                                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900"
                                             />
                                             <label htmlFor={`perm-${value}`} className="text-xs text-slate-300 select-none cursor-pointer">
                                                 {permissionLabels[key] || key.replace('VIEW_', 'Ver ').replace('MANAGE_', 'Gerenciar ').replace('_', ' ')}
@@ -367,7 +367,7 @@ export const Users = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+                                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
                                 >
                                     {currentUserId ? 'Salvar Alterações' : 'Criar Usuário'}
                                 </button>

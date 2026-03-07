@@ -71,7 +71,7 @@ export const Controladoria = () => {
 
                 <div className="glass-card p-5 rounded-xl">
                     <p className="text-slate-400 text-sm font-medium mb-1">Lucro Líquido</p>
-                    <h3 className={`text-2xl font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <h3 className={`text-2xl font-bold ${netProfit >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
                         R$ {netProfit.toLocaleString()}
                     </h3>
                 </div>
