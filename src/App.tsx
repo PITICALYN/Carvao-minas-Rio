@@ -26,31 +26,31 @@ function App() {
     }
   }, [currentUser, initialize]);
 
-  if (!currentUser) {
-    return <Login />;
-  }
-
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="comercial" element={<Comercial />} />
-          <Route path="vendas" element={<Sales />} />
-          <Route path="compras" element={<Compras />} />
-          <Route path="estoque" element={<Inventory />} />
-          <Route path="production" element={<Production />} />
-          <Route path="expedicao" element={<Expedicao />} />
-          <Route path="financeiro" element={<Financeiro />} />
-          <Route path="controladoria" element={<Reports />} />
-          <Route path="dre" element={<DRE />} />
-          <Route path="usuarios" element={<Users />} />
-          <Route path="configuracoes" element={<Settings />} />
-          <Route path="auditoria" element={<AuditLogs />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
+      {!currentUser ? (
+        <Login />
+      ) : (
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="comercial" element={<Comercial />} />
+            <Route path="vendas" element={<Sales />} />
+            <Route path="compras" element={<Compras />} />
+            <Route path="estoque" element={<Inventory />} />
+            <Route path="production" element={<Production />} />
+            <Route path="expedicao" element={<Expedicao />} />
+            <Route path="financeiro" element={<Financeiro />} />
+            <Route path="controladoria" element={<Reports />} />
+            <Route path="dre" element={<DRE />} />
+            <Route path="usuarios" element={<Users />} />
+            <Route path="configuracoes" element={<Settings />} />
+            <Route path="auditoria" element={<AuditLogs />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      )}
     </BrowserRouter>
   );
 }
