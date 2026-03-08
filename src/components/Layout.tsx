@@ -116,11 +116,11 @@ export const Layout = () => {
             )}>
                 <div className="p-8 flex flex-col items-center">
                     <img
-                        src={useAppStore.getState().systemSettings.logoUrl}
+                        src={useAppStore.getState().systemSettings?.logoUrl || '/logo.jpg'}
                         alt="Logo"
                         className="h-24 w-24 mb-2 rounded-full border-2 border-blue-500/20 object-cover shadow-xl"
                     />
-                    <p className="text-sm font-bold text-white text-center">{useAppStore.getState().systemSettings.title}</p>
+                    <p className="text-sm font-bold text-white text-center">{useAppStore.getState().systemSettings?.title || 'Minas Rio'}</p>
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
@@ -292,7 +292,7 @@ export const Layout = () => {
                             Software Oficial
                         </p>
                         <p className="text-[10px] text-slate-300 font-mono">
-                            v1.0.3 - Final Build
+                            v1.0.4 - Estável (Auditada)
                         </p>
                     </div>
                 </div>

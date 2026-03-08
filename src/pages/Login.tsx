@@ -32,7 +32,7 @@ export const Login = () => {
             <div className="max-w-md w-full relative z-10">
                 <div className="text-center mb-12 flex flex-col items-center">
                     <img src="/logo.jpg" alt="Minas Rio" className="h-32 w-auto mb-4 rounded-xl shadow-lg shadow-blue-500/20" />
-                    <p className="text-slate-400">Gestão Inteligente</p>
+                    <p className="text-slate-400">Minas Rio - Gestão de Carvão</p>
                 </div>
 
                 <div className="glass-panel p-8 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-xl bg-slate-900/50">

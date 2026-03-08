@@ -140,6 +140,19 @@ export const useAppStore = create<AppState>()(
         drivers: [],
         shipments: [],
         auditLogs: [],
+        notifications: [],
+        dreSettings: {
+            taxRate: 6,
+            laborCostPerUnit: 0.50,
+            packagingCostPerUnit: 1.20,
+            transportCostPerBag: 2.00,
+            cmvRate: 40,
+            fixedLaborCost: 0
+        },
+        systemSettings: {
+            logoUrl: '/logo.jpg',
+            title: 'Minas Rio - Gestão de Carvão',
+        },
 
         initialize: async () => {
             try {
@@ -1227,8 +1240,6 @@ export const useAppStore = create<AppState>()(
             };
         }),
 
-        // Notifications
-        notifications: [],
 
         addNotification: (notification) => set((state) => ({
             notifications: [notification, ...state.notifications]
@@ -1325,26 +1336,12 @@ export const useAppStore = create<AppState>()(
             }
         },
 
-        // Settings
-        dreSettings: {
-            taxRate: 6,
-            laborCostPerUnit: 0.50, // R$ 0,50 por saco (exemplo)
-            packagingCostPerUnit: 1.20, // R$ 1,20 por saco (exemplo)
-            transportCostPerBag: 2.00, // R$ 2,00 por saco (exemplo)
-            cmvRate: 40,
-            fixedLaborCost: 0
-        },
 
         updateDreSettings: (settings) => set(() => ({
             dreSettings: settings
         })),
 
         // Branding Actions
-        systemSettings: {
-            logoUrl: '/logo.jpg',
-            title: 'Gestão Inteligente'
-        },
-
         updateSystemSettings: async (settings) => {
             set({ systemSettings: settings });
             await supabase.from('app_settings').upsert({
