@@ -106,7 +106,7 @@ export const Production = () => {
                 newInputs[index].weight = '';
             }
         } else {
-            newInputs[index].weight = value;
+            newInputs[index].weight = parseFloat(value) < 0 ? '0' : value;
         }
 
         setInputs(newInputs);

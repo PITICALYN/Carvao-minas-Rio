@@ -340,10 +340,12 @@ export const Compras = () => {
                                             <label className="block text-xs text-slate-400 mb-1">Quantidade (Kg/Un)</label>
                                             <input
                                                 type="number"
+                                                min="0"
                                                 placeholder="Qtd"
                                                 value={currentItem.quantity || ''}
                                                 onChange={e => {
-                                                    const quantity = Number(e.target.value);
+                                                    const val = e.target.value;
+                                                    const quantity = Math.max(0, Number(val));
                                                     setCurrentItem({
                                                         ...currentItem,
                                                         quantity,
@@ -362,10 +364,12 @@ export const Compras = () => {
                                             <label className="block text-xs text-slate-400 mb-1">Valor Unitário (R$)</label>
                                             <input
                                                 type="number"
+                                                min="0"
                                                 placeholder="R$ Unit."
                                                 value={currentItem.unitPrice || ''}
                                                 onChange={e => {
-                                                    const unitPrice = Number(e.target.value);
+                                                    const val = e.target.value;
+                                                    const unitPrice = Math.max(0, Number(val));
                                                     setCurrentItem({
                                                         ...currentItem,
                                                         unitPrice,
@@ -389,7 +393,8 @@ export const Compras = () => {
                                     <button
                                         type="button"
                                         onClick={addItem}
-                                        className="w-full btn-primary py-2 rounded-lg text-sm flex justify-center items-center gap-2"
+                                        disabled={currentItem.quantity <= 0 || currentItem.unitPrice <= 0}
+                                        className="w-full btn-primary py-2 rounded-lg text-sm flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Plus className="w-4 h-4" /> Adicionar Item
                                     </button>

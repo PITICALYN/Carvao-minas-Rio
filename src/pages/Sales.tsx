@@ -402,8 +402,9 @@ export const Sales = () => {
                                                 type="number"
                                                 value={item.qty}
                                                 onChange={(e) => {
+                                                    const val = e.target.value;
                                                     const newItems = [...items];
-                                                    newItems[idx].qty = e.target.value;
+                                                    newItems[idx].qty = parseFloat(val) < 0 ? '0' : val;
                                                     setItems(newItems);
                                                 }}
                                                 className="w-24 input-field px-3 py-2 text-sm"
@@ -430,7 +431,8 @@ export const Sales = () => {
                                     <button
                                         type="button"
                                         onClick={handleAddItem}
-                                        className="text-sm text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
+                                        disabled={items.some(item => (parseFloat(item.qty) || 0) <= 0)}
+                                        className="text-sm text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Plus className="w-4 h-4" /> Adicionar Item
                                     </button>
