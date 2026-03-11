@@ -15,6 +15,7 @@ import { Users } from './pages/Users';
 import { Settings } from './pages/Settings';
 import { DRE } from './pages/DRE';
 import { AuditLogs } from './pages/AuditLogs';
+import { Suppliers } from './pages/Suppliers';
 import { useAppStore } from './store/useAppStore';
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
             <Route path="comercial" element={<Comercial />} />
             <Route path="vendas" element={<Sales />} />
             <Route path="compras" element={<Compras />} />
+            <Route path="suppliers" element={<Suppliers />} />
             <Route path="estoque" element={<Inventory />} />
             <Route path="production" element={<Production />} />
             <Route path="expedicao" element={<Expedicao />} />
