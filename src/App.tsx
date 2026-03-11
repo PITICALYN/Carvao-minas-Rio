@@ -39,7 +39,10 @@ function App() {
             <Route path="comercial" element={<Comercial />} />
             <Route path="vendas" element={<Sales />} />
             <Route path="compras" element={<Compras />} />
-            <Route path="suppliers" element={<Suppliers />} />
+            <Route path="compras" element={<Compras />} />
+            <Route path="fornecedores" element={<Suppliers />} />
+            <Route path="suppliers" element={<Navigate to="/fornecedores" replace />} />
+            <Route path="estoque" element={<Inventory />} />
             <Route path="estoque" element={<Inventory />} />
             <Route path="production" element={<Production />} />
             <Route path="expedicao" element={<Expedicao />} />

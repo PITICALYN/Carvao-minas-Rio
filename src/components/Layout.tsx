@@ -140,7 +140,7 @@ export const Layout = () => {
                     {(hasPermission('manage_inventory') || currentUser?.role === 'Financial') && (
                         <>
                             <NavItem to="/compras" icon={ShoppingBag} label="Compras" />
-                            <NavItem to="/suppliers" icon={User} label="Fornecedores" />
+                            <NavItem to="/fornecedores" icon={User} label="Fornecedores" />
                         </>
                     )}
 
